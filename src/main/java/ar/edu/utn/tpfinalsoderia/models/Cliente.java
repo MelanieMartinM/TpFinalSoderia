@@ -6,7 +6,7 @@ public class Cliente extends Persona{
 
     public Cliente(String direccion, String id, String nombre, String telefono, boolean activo) {
         super(direccion, id, nombre, telefono);
-        this.activo = true;
+        this.activo = activo;
     }
 
     public boolean isActivo() {
