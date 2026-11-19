@@ -23,12 +23,32 @@ public class Usuario {
         this.activo = true;
     }
 
+
+    //permite reconstruir un usuario que viene de la base, respetando si está activo o no.
+    public Usuario(
+            String id,
+            String nombreUsuario,
+            String hashContrasena,
+            RolUsuario rol,
+            boolean activo
+    ) {
+        this.id = id;
+        this.nombreUsuario = nombreUsuario;
+        this.hashContrasena = hashContrasena;
+        this.rol = rol;
+        this.activo = activo;
+    }
+
     public String getId() {
         return id;
     }
 
     public String getNombreUsuario() {
         return nombreUsuario;
+    }
+
+    public String getHashContrasena() {
+        return hashContrasena;
     }
 
     public RolUsuario getRol() {

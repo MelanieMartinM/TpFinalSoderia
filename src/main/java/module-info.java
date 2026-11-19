@@ -5,5 +5,7 @@ module ar.edu.utn.tpfinalsoderia {
 
 
     opens ar.edu.utn.tpfinalsoderia to javafx.fxml;
+    opens ar.edu.utn.tpfinalsoderia.controllers to javafx.fxml;
+
     exports ar.edu.utn.tpfinalsoderia;
 }
