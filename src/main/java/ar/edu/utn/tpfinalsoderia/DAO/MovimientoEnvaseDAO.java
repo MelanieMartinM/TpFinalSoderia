@@ -9,120 +9,109 @@ import ar.edu.utn.tpfinalsoderia.models.MovimientoEnvase;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public class MovimientoEnvaseDAO extends RepositorioJdbc<MovimientoEnvase>
-{
+public class MovimientoEnvaseDAO extends RepositorioJdbc<MovimientoEnvase> {
 
-    public MovimientoEnvaseDAO(Connection conexion)
-    {
+    private static final String SELECT_BASE = """
+            SELECT m.id, m.cliente_id, m.envase_id, m.tipo, m.cantidad, m.fecha,
+                   c.nombre AS cliente_nombre, c.telefono AS cliente_telefono, c.direccion AS cliente_direccion, c.activo AS cliente_activo,
+                   e.descripcion AS envase_descripcion
+            FROM movimiento_envase m
+            LEFT JOIN clientes c ON m.cliente_id = c.id
+            INNER JOIN envases e ON m.envase_id = e.id
+            """;
+
+    public MovimientoEnvaseDAO(Connection conexion) {
         super(conexion);
     }
 
     @Override
-    public void guardar(MovimientoEnvase mov)
-    {
-        String sql = "INSERT INTO movimiento_envase (cliente_id, envase_id, tipo, cantidad, fecha) VALUES (?, ?, ?, ?, ?)";
-
-        try (PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS))
-        {
-            if (mov.getTitular() != null)
-            {
-                ps.setString(1, mov.getTitular().getId());
-            } else
-            {
-                ps.setNull(1, Types.VARCHAR);
+    public void guardar(MovimientoEnvase mov) {
+        if (mov.getId() == null || mov.getId().isBlank()) {
+            mov.setId(UUID.randomUUID().toString());
+        }
+        String sql = "INSERT INTO movimiento_envase (id, cliente_id, envase_id, tipo, cantidad, fecha) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, mov.getId());
+            if (mov.getTitular() != null) {
+                ps.setString(2, mov.getTitular().getId());
+            } else {
+                ps.setNull(2, Types.VARCHAR);
             }
-            ps.setString(2, mov.getEnvase().getId());
-            ps.setString(3, mov.getTipo().name());
-            ps.setInt(4, mov.getCantidad());
-            ps.setTimestamp(5, Timestamp.valueOf(mov.getFecha()));
+            ps.setString(3, mov.getEnvase().getId());
+            ps.setString(4, mov.getTipo().name());
+            ps.setInt(5, mov.getCantidad());
+            ps.setTimestamp(6, Timestamp.valueOf(mov.getFecha()));
             ps.executeUpdate();
-
-            try (ResultSet rs = ps.getGeneratedKeys())
-            {
-                if (rs.next())
-                {
-                    mov.setId(rs.getInt(1));
-                }
-            }
-        } catch (SQLException e)
-        {
+        } catch (SQLException e) {
             throw new PersistenciaException("Error al registrar movimiento de envase", e);
         }
     }
 
     @Override
-    public MovimientoEnvase buscarPorId(String id)
-    {
-        String sql = "SELECT * FROM movimiento_envase WHERE id = ?";
-
-        try (PreparedStatement ps = conexion.prepareStatement(sql))
-        {
-            ps.setInt(1, Integer.parseInt(id));
-            try (ResultSet rs = ps.executeQuery())
-            {
-                if (rs.next())
-                {
+    public MovimientoEnvase buscarPorId(String id) {
+        String sql = SELECT_BASE + " WHERE m.id = ?";
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
                     return mapear(rs);
                 }
             }
-        } catch (SQLException e)
-        {
+        } catch (SQLException e) {
             throw new PersistenciaException("Error al buscar movimiento de envase por id", e);
         }
         return null;
     }
 
     @Override
-    public List<MovimientoEnvase> listar()
-    {
+    public List<MovimientoEnvase> listar() {
         List<MovimientoEnvase> lista = new ArrayList<>();
-
-        String sql = "SELECT * FROM movimiento_envase ORDER BY fecha DESC";
-
+        String sql = SELECT_BASE + " ORDER BY m.fecha DESC";
         try (PreparedStatement ps = conexion.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery())
-        {
-            while (rs.next())
-            {
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
                 lista.add(mapear(rs));
             }
-        } catch (SQLException e)
-        {
+        } catch (SQLException e) {
             throw new PersistenciaException("Error al listar movimientos de envases", e);
         }
         return lista;
     }
 
     @Override
-    public void actualizar(MovimientoEnvase mov)
-    {
+    public void actualizar(MovimientoEnvase mov) {
         throw new UnsupportedOperationException("Los movimientos históricos de inventario no se modifican.");
     }
 
     @Override
-    public void eliminar(String id)
-    {
+    public void eliminar(String id) {
         throw new UnsupportedOperationException("Los movimientos históricos de inventario no se eliminan.");
     }
 
     @Override
-    protected MovimientoEnvase mapear(ResultSet rs) throws SQLException
-    {
+    protected MovimientoEnvase mapear(ResultSet rs) throws SQLException {
         MovimientoEnvase mov = new MovimientoEnvase();
-        mov.setId(rs.getInt("id"));
+        mov.setId(rs.getString("id"));
         mov.setTipo(TipoMovimientoEnvase.valueOf(rs.getString("tipo")));
         mov.setCantidad(rs.getInt("cantidad"));
         mov.setFecha(rs.getTimestamp("fecha").toLocalDateTime());
 
         String clienteId = rs.getString("cliente_id");
-        if (clienteId != null)
-        {
-            mov.setTitular(new Cliente("", clienteId, "", "", true));
+        if (clienteId != null) {
+            mov.setTitular(new Cliente(
+                    rs.getString("cliente_direccion"),
+                    clienteId,
+                    rs.getString("cliente_nombre"),
+                    rs.getString("cliente_telefono"),
+                    rs.getBoolean("cliente_activo")
+            ));
         }
 
         Envase envase = new Envase();
         envase.setId(rs.getString("envase_id"));
+        envase.setDescripcion(rs.getString("envase_descripcion"));
         mov.setEnvase(envase);
 
         return mov;
