@@ -7,11 +7,18 @@ public abstract class Persona {
     private String telefono;
     private String direccion;
 
+    public Persona() {
+    }
+
     public Persona(String direccion, String id, String nombre, String telefono) {
         this.direccion = direccion;
         this.id = id;
         this.nombre = nombre;
         this.telefono = telefono;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getId() {
