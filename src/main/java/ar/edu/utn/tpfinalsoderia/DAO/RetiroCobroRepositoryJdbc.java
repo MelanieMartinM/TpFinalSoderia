@@ -215,7 +215,7 @@ public class RetiroCobroRepositoryJdbc
         {
             throw new PersistenciaException("Error al listar cobros", e);
         }
-        
+
         return lista;
     }
 }
