@@ -1,5 +1,6 @@
 package ar.edu.utn.tpfinalsoderia.services;
 
+import ar.edu.utn.tpfinalsoderia.DAO.CajonDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.MovimientoEnvaseDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.StockEnvaseDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.StockProductoDAO;
@@ -16,61 +17,78 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class InventarioService {
-
+public class InventarioService
+{
     private final Connection conexion;
     private final StockEnvaseDAO stockEnvaseDAO;
     private final StockProductoDAO stockProductoDAO;
     private final MovimientoEnvaseDAO movimientoEnvaseDAO;
+    private final CajonDAO cajonDAO;
 
-    public InventarioService(Connection conexion,
-                             StockEnvaseDAO stockEnvaseDAO,
-                             StockProductoDAO stockProductoDAO,
-                             MovimientoEnvaseDAO movimientoEnvaseDAO) {
+    public InventarioService(Connection conexion, StockEnvaseDAO stockEnvaseDAO, StockProductoDAO stockProductoDAO, MovimientoEnvaseDAO movimientoEnvaseDAO)
+    {
+        this(conexion, stockEnvaseDAO, stockProductoDAO, movimientoEnvaseDAO, new CajonDAO(conexion));
+    }
+
+    public InventarioService(Connection conexion, StockEnvaseDAO stockEnvaseDAO, StockProductoDAO stockProductoDAO, MovimientoEnvaseDAO movimientoEnvaseDAO, CajonDAO cajonDAO)
+    {
         this.conexion = conexion;
         this.stockEnvaseDAO = stockEnvaseDAO;
         this.stockProductoDAO = stockProductoDAO;
         this.movimientoEnvaseDAO = movimientoEnvaseDAO;
+        this.cajonDAO = cajonDAO;
     }
 
-    /**
-     * Registra la recepción de envases vacíos (ingresan como SUCIOS) dentro de una transacción.
-     */
     public void registrarRecepcionVacios(Cliente titular, Envase envase, int cantidad) throws ReglaNegocioException {
+        registrarIngresoEnvases(titular, envase, cantidad, TipoMovimientoEnvase.INGRESO);
+    }
+
+    public void registrarDevolucionEnvases(Cliente titular, Envase envase, int cantidad) throws ReglaNegocioException {
+        registrarIngresoEnvases(titular, envase, cantidad, TipoMovimientoEnvase.RETORNO);
+    }
+
+    private void registrarIngresoEnvases(Cliente titular, Envase envase, int cantidad, TipoMovimientoEnvase tipoMov)
+            throws ReglaNegocioException {
         validarCantidadPositiva(cantidad);
         Cliente titularValidado = validarYCompletarTitular(titular);
         Envase envaseValidado = validarYCompletarEnvase(envase);
 
         try {
-            ejecutarEnTransaccion(() -> {
-                String clienteId = (titularValidado != null) ? titularValidado.getId() : null;
-                StockEnvase stock = stockEnvaseDAO.buscarPorTitularYEnvase(clienteId, envaseValidado.getId());
+            conexion.setAutoCommit(false);
 
-                if (stock == null) {
-                    stock = new StockEnvase(UUID.randomUUID().toString(), titularValidado, envaseValidado, 0, cantidad);
-                    stockEnvaseDAO.guardar(stock);
-                } else {
-                    stock.acreditarVacios(cantidad);
-                    stockEnvaseDAO.actualizar(stock);
-                }
+            String clienteId = (titularValidado != null) ? titularValidado.getId() : null;
+            StockEnvase stock = stockEnvaseDAO.buscarPorTitularYEnvase(clienteId, envaseValidado.getId());
 
-                registrarMovimiento(titularValidado, envaseValidado, TipoMovimientoEnvase.INGRESO, cantidad);
-            });
-        } catch (StockInsuficienteException e) {
-            throw new RuntimeException(e);
+            if (stock == null) {
+                stock = new StockEnvase(UUID.randomUUID().toString(), titularValidado, envaseValidado, 0, cantidad);
+                stockEnvaseDAO.guardar(stock);
+            } else {
+                stock.acreditarVacios(cantidad);
+                stockEnvaseDAO.actualizar(stock);
+            }
+
+            registrarMovimiento(titularValidado, envaseValidado, tipoMov, cantidad);
+            conexion.commit();
+        } catch (ReglaNegocioException | RuntimeException e) {
+            hacerRollback();
+            throw e;
+        } catch (SQLException e) {
+            hacerRollback();
+            throw new PersistenciaException("Error en la transacción de ingreso de envases", e);
+        } finally {
+            restaurarAutoCommit();
         }
     }
 
-    /**
-     * Pasa envases de estado SUCIO a APTO tras el lavado y sanitizado dentro de una transacción.
-     */
     public void registrarLavado(Cliente titular, Envase envase, int cantidad)
             throws ReglaNegocioException, StockInsuficienteException {
         validarCantidadPositiva(cantidad);
         Cliente titularValidado = validarYCompletarTitular(titular);
         Envase envaseValidado = validarYCompletarEnvase(envase);
 
-        ejecutarEnTransaccion(() -> {
+        try {
+            conexion.setAutoCommit(false);
+
             String clienteId = (titularValidado != null) ? titularValidado.getId() : null;
             StockEnvase stock = stockEnvaseDAO.buscarPorTitularYEnvase(clienteId, envaseValidado.getId());
 
@@ -84,13 +102,18 @@ public class InventarioService {
             stockEnvaseDAO.actualizar(stock);
 
             registrarMovimiento(titularValidado, envaseValidado, TipoMovimientoEnvase.LAVADO, cantidad);
-        });
+            conexion.commit();
+        } catch (ReglaNegocioException | StockInsuficienteException | RuntimeException e) {
+            hacerRollback();
+            throw e;
+        } catch (SQLException e) {
+            hacerRollback();
+            throw new PersistenciaException("Error en la transacción de lavado", e);
+        } finally {
+            restaurarAutoCommit();
+        }
     }
 
-    /**
-     * Consume envases APTOS y genera stock de producto lleno (Presentacion) dentro de una transacción.
-     * Obtiene el envase desde la presentación persistida y valida titularidad de la marca.
-     */
     public void registrarProduccion(Cliente titular, Presentacion presentacion, int cantidad)
             throws ReglaNegocioException, StockInsuficienteException {
         validarCantidadPositiva(cantidad);
@@ -115,7 +138,9 @@ public class InventarioService {
 
         validarTitularidadMarca(titularValidado, presCompleta.getMarca());
 
-        ejecutarEnTransaccion(() -> {
+        try {
+            conexion.setAutoCommit(false);
+
             String clienteId = (titularValidado != null) ? titularValidado.getId() : null;
             StockEnvase stockEnvase = stockEnvaseDAO.buscarPorTitularYEnvase(clienteId, envase.getId());
 
@@ -136,7 +161,70 @@ public class InventarioService {
             }
 
             registrarMovimiento(titularValidado, envase, TipoMovimientoEnvase.PRODUCCION, cantidad);
-        });
+            conexion.commit();
+        } catch (ReglaNegocioException | StockInsuficienteException | RuntimeException e) {
+            hacerRollback();
+            throw e;
+        } catch (SQLException e) {
+            hacerRollback();
+            throw new PersistenciaException("Error en la transacción de producción", e);
+        } finally {
+            restaurarAutoCommit();
+        }
+    }
+
+    public void registrarMovimientoCajon(Cliente cliente, String tipoCajonId, int cantidad, boolean esRetorno)
+            throws ReglaNegocioException, StockInsuficienteException {
+        validarCantidadPositiva(cantidad);
+        if (tipoCajonId == null || tipoCajonId.isBlank()) {
+            throw new ReglaNegocioException("Debe ingresar el ID del tipo de cajón.");
+        }
+
+        TipoCajon tipoCajon = cajonDAO.buscarTipoCajonPorId(tipoCajonId);
+        if (tipoCajon == null) {
+            throw new ReglaNegocioException("El tipo de cajón '" + tipoCajonId + "' no existe.");
+        }
+
+        Cliente clienteValidado = validarYCompletarTitular(cliente);
+        if (!esRetorno && clienteValidado == null) {
+            throw new ReglaNegocioException("Para registrar una salida de cajones debe indicar el repartidor o cliente.");
+        }
+
+        try {
+            conexion.setAutoCommit(false);
+
+            StockCajon stock = cajonDAO.buscarStockPorTipo(tipoCajon.getId());
+            int disponibles = (stock == null) ? 0 : stock.getDisponiblesFabrica();
+
+            if (esRetorno) {
+                disponibles += cantidad;
+            } else {
+                if (disponibles < cantidad) {
+                    throw new StockInsuficienteException("Stock de cajones insuficiente en fábrica. Disponibles: " + disponibles);
+                }
+                disponibles -= cantidad;
+            }
+
+            cajonDAO.guardarOActualizarStock(new StockCajon(tipoCajon, disponibles));
+            cajonDAO.registrarMovimiento(new MovimientoCajon(
+                    UUID.randomUUID().toString(),
+                    clienteValidado,
+                    tipoCajon,
+                    cantidad,
+                    LocalDateTime.now(),
+                    esRetorno
+            ));
+
+            conexion.commit();
+        } catch (ReglaNegocioException | StockInsuficienteException | RuntimeException e) {
+            hacerRollback();
+            throw e;
+        } catch (SQLException e) {
+            hacerRollback();
+            throw new PersistenciaException("Error en la transacción de cajones", e);
+        } finally {
+            restaurarAutoCommit();
+        }
     }
 
     public List<StockEnvase> listarStockEnvases() {
@@ -151,13 +239,21 @@ public class InventarioService {
         return movimientoEnvaseDAO.listar();
     }
 
+    public List<StockCajon> listarStockCajones() {
+        return cajonDAO.listarStocks();
+    }
+
+    public List<MovimientoCajon> listarMovimientosCajones() {
+        return cajonDAO.listarMovimientos();
+    }
+
     private Cliente validarYCompletarTitular(Cliente titular) throws ReglaNegocioException {
         if (titular == null || titular.getId() == null || titular.getId().isBlank()) {
-            return null; // Producción o stock propio de la fábrica
+            return null;
         }
         Cliente encontrado = stockEnvaseDAO.buscarClientePorId(titular.getId());
         if (encontrado == null) {
-            throw new ReglaNegocioException("El cliente fasón con ID '" + titular.getId() + "' no existe.");
+            throw new ReglaNegocioException("El cliente con ID '" + titular.getId() + "' no existe.");
         }
         if (!encontrado.isActivo()) {
             throw new ReglaNegocioException("El cliente '" + encontrado.getNombre() + "' se encuentra inactivo.");
@@ -219,41 +315,16 @@ public class InventarioService {
         }
     }
 
-    @FunctionalInterface
-    private interface OperacionTransaccional {
-        void ejecutar() throws ReglaNegocioException, StockInsuficienteException;
-    }
-
-    private void ejecutarEnTransaccion(OperacionTransaccional operacion)
-            throws ReglaNegocioException, StockInsuficienteException {
-        boolean autoCommitOriginal = true;
-        try {
-            autoCommitOriginal = conexion.getAutoCommit();
-            conexion.setAutoCommit(false);
-
-            operacion.ejecutar();
-
-            conexion.commit();
-        } catch (ReglaNegocioException | StockInsuficienteException e) {
-            hacerRollback();
-            throw e;
-        } catch (RuntimeException e) {
-            hacerRollback();
-            throw e;
-        } catch (SQLException e) {
-            hacerRollback();
-            throw new PersistenciaException("Error en la transacción de inventario", e);
-        } finally {
-            try {
-                conexion.setAutoCommit(autoCommitOriginal);
-            } catch (SQLException ignored) {
-            }
-        }
-    }
-
     private void hacerRollback() {
         try {
             conexion.rollback();
+        } catch (SQLException ignored) {
+        }
+    }
+
+    private void restaurarAutoCommit() {
+        try {
+            conexion.setAutoCommit(true);
         } catch (SQLException ignored) {
         }
     }
