@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class Presentacion {
 
-    private int id;
+    private String id;
     private String nombre;
     private Producto producto;
     private Envase envase;
@@ -13,12 +13,10 @@ public class Presentacion {
     private BigDecimal precioLlenado;
     private boolean activa;
 
-
     public Presentacion() {
     }
 
-
-    public Presentacion(int id, String nombre, Producto producto, Envase envase, Marca marca, BigDecimal precioLlenado, boolean activa) {
+    public Presentacion(String id, String nombre, Producto producto, Envase envase, Marca marca, BigDecimal precioLlenado, boolean activa) {
         this.id = id;
         this.nombre = nombre;
         this.producto = producto;
@@ -28,12 +26,11 @@ public class Presentacion {
         this.activa = activa;
     }
 
-
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -85,16 +82,14 @@ public class Presentacion {
         this.activa = activa;
     }
 
-
-    public void desactivar(){
-
+    public void desactivar() {
         setActiva(false);
     }
 
     @Override
     public String toString() {
         return "Presentacion{" +
-                "id=" + id +
+                "id='" + id + '\'' +
                 ", nombre='" + nombre + '\'' +
                 ", producto=" + producto +
                 ", envase=" + envase +
@@ -107,7 +102,7 @@ public class Presentacion {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Presentacion that)) return false;
-        return id == that.id;
+        return Objects.equals(id, that.id);
     }
 
     @Override
