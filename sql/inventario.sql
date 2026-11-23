@@ -44,3 +44,33 @@ CREATE TABLE IF NOT EXISTS movimiento_envase (
     CONSTRAINT fk_mov_envase_cliente FOREIGN KEY (cliente_id) REFERENCES clientes(id),
     CONSTRAINT fk_mov_envase_envase FOREIGN KEY (envase_id) REFERENCES envases(id)
 );
+
+CREATE TABLE IF NOT EXISTS tipos_cajon (
+    id VARCHAR(50) NOT NULL,
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    descripcion VARCHAR(120) NOT NULL,
+    capacidad INT NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT chk_tipo_cajon_cap CHECK (capacidad > 0)
+);
+
+CREATE TABLE IF NOT EXISTS stock_cajon (
+    tipo_cajon_id VARCHAR(50) NOT NULL,
+    disponibles_fabrica INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (tipo_cajon_id),
+    CONSTRAINT chk_stock_cajon_disp CHECK (disponibles_fabrica >= 0),
+    CONSTRAINT fk_stock_cajon_tipo FOREIGN KEY (tipo_cajon_id) REFERENCES tipos_cajon(id)
+);
+
+CREATE TABLE IF NOT EXISTS movimiento_cajon (
+    id VARCHAR(50) NOT NULL,
+    cliente_id VARCHAR(50) NULL,
+    tipo_cajon_id VARCHAR(50) NOT NULL,
+    cantidad INT NOT NULL,
+    fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    es_retorno BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT chk_mov_cajon_cant CHECK (cantidad > 0),
+    CONSTRAINT fk_mov_cajon_cliente FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+    CONSTRAINT fk_mov_cajon_tipo FOREIGN KEY (tipo_cajon_id) REFERENCES tipos_cajon(id)
+);

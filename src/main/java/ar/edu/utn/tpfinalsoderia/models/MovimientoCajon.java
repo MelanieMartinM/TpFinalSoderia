@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class MovimientoCajon
 {
-    private int id;
+    private String id;
     private Cliente cliente;
     private TipoCajon tipoCajon;
     private int cantidad;
@@ -13,7 +13,7 @@ public class MovimientoCajon
 
     public MovimientoCajon() {}
 
-    public MovimientoCajon(int id, Cliente cliente, TipoCajon tipoCajon, int cantidad, LocalDateTime fecha, boolean esRetorno) {
+    public MovimientoCajon(String id, Cliente cliente, TipoCajon tipoCajon, int cantidad, LocalDateTime fecha, boolean esRetorno) {
         this.id = id;
         this.cliente = cliente;
         this.tipoCajon = tipoCajon;
@@ -22,8 +22,8 @@ public class MovimientoCajon
         this.esRetorno = esRetorno;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public Cliente getCliente() { return cliente; }
     public void setCliente(Cliente cliente) { this.cliente = cliente; }
     public TipoCajon getTipoCajon() { return tipoCajon; }
