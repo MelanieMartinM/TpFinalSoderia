@@ -16,4 +16,5 @@ module ar.edu.utn.tpfinalsoderia
     exports ar.edu.utn.tpfinalsoderia.enums;
     exports ar.edu.utn.tpfinalsoderia.exceptions;
     exports ar.edu.utn.tpfinalsoderia.interfaces;
+    opens ar.edu.utn.tpfinalsoderia.DAO to javafx.base;
 }

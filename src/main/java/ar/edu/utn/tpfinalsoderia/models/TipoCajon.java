@@ -11,8 +11,7 @@ public class TipoCajon implements Retornable
 
     public TipoCajon() {}
 
-    public TipoCajon(String id, String codigo, String descripcion, int capacidad)
-    {
+    public TipoCajon(String id, String codigo, String descripcion, int capacidad) {
         this.id = id;
         this.codigo = codigo;
         this.descripcion = descripcion;
@@ -26,10 +25,7 @@ public class TipoCajon implements Retornable
     public String getDescripcion() { return descripcion; }
 
     public String getId() { return id; }
-    public void setId(String id)
-    {
-        this.id = id;
-    }
+    public void setId(String id) { this.id = id; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
     public int getCapacidad() { return capacidad; }
