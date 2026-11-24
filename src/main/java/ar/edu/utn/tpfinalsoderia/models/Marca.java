@@ -65,7 +65,7 @@ private Cliente titular;
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Marca marca)) return false;
-        return id == marca.id;
+        return Objects.equals(id, marca.id);
     }
 
     @Override

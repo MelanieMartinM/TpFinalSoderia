@@ -158,8 +158,6 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
             return null;
         } catch (SQLException e) {
             throw new PersistenciaException("Error al buscar el pedido id: " + id, e);
-        } catch (NumberFormatException e) {
-            throw new PersistenciaException("El id del pedido no es un número válido: " + id, e);
         }
     }
 
@@ -203,8 +201,6 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new PersistenciaException("Error al cancelar el pedido id: " + id, e);
-        } catch (NumberFormatException e) {
-            throw new PersistenciaException("El id del pedido no es un número válido: " + id, e);
         }
     }
     /// insertar,actualizar,eliminar,cargarDetallesDePedido
@@ -243,7 +239,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
                 if (detalle.getTipoCajon() != null && detalle.getTipoCajon().getId() !=null) {
                     ps.setString(6, detalle.getTipoCajon().getId());
                 } else {
-                    ps.setNull(6, Types.INTEGER);
+                    ps.setNull(6, Types.VARCHAR );
                 }
 
                 ps.addBatch();

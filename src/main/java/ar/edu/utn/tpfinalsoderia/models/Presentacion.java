@@ -13,8 +13,10 @@ public class Presentacion {
     private BigDecimal precioLlenado;
     private boolean activa;
 
+
     public Presentacion() {
     }
+
 
     public Presentacion(String id, String nombre, Producto producto, Envase envase, Marca marca, BigDecimal precioLlenado, boolean activa) {
         this.id = id;
@@ -25,6 +27,7 @@ public class Presentacion {
         this.precioLlenado = precioLlenado;
         this.activa = activa;
     }
+
 
     public String getId() {
         return id;
@@ -82,14 +85,16 @@ public class Presentacion {
         this.activa = activa;
     }
 
-    public void desactivar() {
+
+    public void desactivar(){
+
         setActiva(false);
     }
 
     @Override
     public String toString() {
         return "Presentacion{" +
-                "id='" + id + '\'' +
+                "id=" + id +
                 ", nombre='" + nombre + '\'' +
                 ", producto=" + producto +
                 ", envase=" + envase +
@@ -102,7 +107,7 @@ public class Presentacion {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Presentacion that)) return false;
-        return Objects.equals(id, that.id);
+        return id == that.id;
     }
 
     @Override
