@@ -1,4 +1,4 @@
-package ar.edu.utn.tpfinalsoderia.DAO;
+package ar.edu.utn.tpfinalsoderia.services;
 
 import ar.edu.utn.tpfinalsoderia.DAO.MarcaRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.DAO.ProductoRepositoryJdbc;
@@ -72,8 +72,8 @@ public class ServicioCatalogo {
 
     public Marca buscarMarcaPorId(String id) throws PersistenciaException {
         validarIdTexto(id, "marca");
-        validarIdEntero(id.trim(), "marca");
-        return marcaRepositoryJdbc.buscarPorId(id.trim());
+
+        return marcaRepositoryJdbc.buscarPorId(id);
     }
 
     public List<Marca> listarMarcasActivas() throws PersistenciaException {
@@ -82,8 +82,8 @@ public class ServicioCatalogo {
 
     public void desactivarMarca(String id) throws PersistenciaException {
         validarIdTexto(id, "marca");
-        validarIdEntero(id.trim(), "marca");
-        marcaRepositoryJdbc.eliminar(id.trim());
+
+        marcaRepositoryJdbc.eliminar(id);
     }
 
     // --- Validaciones ---
@@ -104,7 +104,7 @@ public class ServicioCatalogo {
         if (marca == null) {
             throw new IllegalArgumentException("La marca no puede ser nula.");
         }
-        if (marca.getId() <= 0) {
+        if (marca.getId() == null) {
             throw new IllegalArgumentException("El ID de la marca debe ser mayor a cero.");
         }
         if (marca.getNombre() == null || marca.getNombre().isBlank()) {
@@ -118,14 +118,4 @@ public class ServicioCatalogo {
         }
     }
 
-    private void validarIdEntero(String id, String entidad) {
-        try {
-            int valor = Integer.parseInt(id);
-            if (valor <= 0) {
-                throw new IllegalArgumentException("El ID de " + entidad + " debe ser mayor a cero.");
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("El ID de " + entidad + " debe ser un número válido.", e);
-        }
-    }
 }

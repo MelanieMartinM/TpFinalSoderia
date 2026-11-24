@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class Pedido {
 
-private int id;
+private String id;
 private Cliente cliente;
         private LocalDateTime fecha;
         private EstadoPedido estado;
@@ -22,18 +22,18 @@ private Cliente cliente;
         }
 
 
-        public Pedido(int id, Cliente cliente){
+        public Pedido(String id, Cliente cliente){
             this();
             this.id=id;
             this.cliente=cliente;
         }
 
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

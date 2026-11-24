@@ -102,6 +102,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
         return pedido;
     }
+
     private DetallePedido mapearDetalle(ResultSet rs) throws SQLException {
         DetallePedido detalle = new DetallePedido();
         detalle.setCantidadUnidades(rs.getInt("cantidad_unidades"));
@@ -112,7 +113,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
         presentacion.setId(rs.getInt("presentacion_id"));
         detalle.setPresentacion(presentacion);
 
-        int tipoCajonId = rs.getInt("tipo_cajon_id");
+        String tipoCajonId = rs.getString("tipo_cajon_id");
         if (!rs.wasNull()) {
             TipoCajon tipoCajon = new TipoCajon();
             tipoCajon.setId(tipoCajonId);
@@ -124,21 +125,21 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
     @Override
     public void guardar(Pedido pedido) throws PersistenciaException{
-try{
-    conexion.setAutoCommit(false);//desactiva el autoguardado
-    int idPedido=  InsertarPedido(pedido);
-    pedido.setId(idPedido);
-    insertarDetalles(pedido);
+        try{
+            conexion.setAutoCommit(false);//desactiva el autoguardado
+            int idPedido=  InsertarPedido(pedido);
+            pedido.setId(idPedido);
+            insertarDetalles(pedido);
 
-    conexion.commit();
+            conexion.commit();
 
-}catch(SQLException |PersistenciaException e){
-    revertirTransaccion();//rollback si hay error
-    throw new PersistenciaException("Error al guardar el pedido id: " + pedido.getId(),e);
+        }catch(SQLException |PersistenciaException e){
+            revertirTransaccion();//rollback si hay error
+            throw new PersistenciaException("Error al guardar el pedido id: " + pedido.getId(),e);
 
-}finally {
-    restaurarAutocommit();
-}
+        }finally {
+            restaurarAutocommit();
+        }
 
     }
 
@@ -146,7 +147,7 @@ try{
     @Override
     public Pedido buscarPorId(String id) throws PersistenciaException {
         try (PreparedStatement ps = conexion.prepareStatement(SQL_BUSCAR_POR_ID)) {
-            ps.setInt(1, Integer.parseInt(id));
+            ps.setString(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Pedido pedido = mapear(rs);
@@ -208,23 +209,24 @@ try{
     }
     /// insertar,actualizar,eliminar,cargarDetallesDePedido
 
-private int InsertarPedido(Pedido pedido) throws PersistenciaException{
-    try(PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_PEDIDO, Statement.RETURN_GENERATED_KEYS)) { //retorna el id del pedido generado
+    private int InsertarPedido(Pedido pedido) throws PersistenciaException{
+        try(PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_PEDIDO, Statement.RETURN_GENERATED_KEYS)) { //retorna el id del pedido generado
 
-ps.setString(1,pedido.getCliente().getId());
-ps.setTimestamp(2,Timestamp.valueOf(pedido.getFecha()));
-ps.setString (3 , pedido.getEstado().name());
-ps.executeUpdate();
+            ps.setString(1,pedido.getCliente().getId());
+            ps.setTimestamp(2,Timestamp.valueOf(pedido.getFecha()));
+            ps.setString (3 , pedido.getEstado().name());
+            ps.executeUpdate();
 
-try(ResultSet keys = ps.getGeneratedKeys()){ /// devuelve el ID generado
-    if(keys.next()){
-        return keys.getInt(1);
+            try(ResultSet keys = ps.getGeneratedKeys()){ /// devuelve el ID generado
+                if(keys.next()){
+                    return keys.getInt(1);
+                }
+            } throw new PersistenciaException("No se pudo obtener el ID generado para el pedido");
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error,Al obtener el ID generado para el pedido.",e);
+        }
     }
-} throw new PersistenciaException("No se pudo obtener el ID generado para el pedido");
-    } catch (SQLException e) {
-        throw new PersistenciaException("Error,Al obtener el ID generado para el pedido.",e);
-    }
-}
+
     private void insertarDetalles(Pedido pedido) throws PersistenciaException {
         if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
             return;
@@ -238,8 +240,8 @@ try(ResultSet keys = ps.getGeneratedKeys()){ /// devuelve el ID generado
                 ps.setBigDecimal(4, detalle.getPrecioUnitario());
                 ps.setInt(5, detalle.getCantidadCajones());
 
-                if (detalle.getTipoCajon() != null && detalle.getTipoCajon().getId() > 0) {
-                    ps.setInt(6, detalle.getTipoCajon().getId());
+                if (detalle.getTipoCajon() != null && detalle.getTipoCajon().getId() !=null) {
+                    ps.setString(6, detalle.getTipoCajon().getId());
                 } else {
                     ps.setNull(6, Types.INTEGER);
                 }
@@ -284,7 +286,7 @@ try(ResultSet keys = ps.getGeneratedKeys()){ /// devuelve el ID generado
     }
 
 
-/// Mapeo y manejo de transacciones
+    /// Mapeo y manejo de transacciones
 
 
 
@@ -294,7 +296,7 @@ try(ResultSet keys = ps.getGeneratedKeys()){ /// devuelve el ID generado
 
 
 
-private void revertirTransaccion() throws PersistenciaException{
+    private void revertirTransaccion() throws PersistenciaException{
         if (conexion!= null){
             try{
                 conexion.rollback();//deshace todos los cambios hechos en la DB desde que inicio esta transaccion
@@ -305,16 +307,16 @@ private void revertirTransaccion() throws PersistenciaException{
     }
 
 
-private  void restaurarAutocommit() throws PersistenciaException{
-if(conexion != null){
-    try{
-        conexion.setAutoCommit(true);//activa el autoguardado
-    } catch (SQLException e) {
-        throw new PersistenciaException("Error. Al reiniciar el Autocommit",e);
-    }
-}
+    private  void restaurarAutocommit() throws PersistenciaException{
+        if(conexion != null){
+            try{
+                conexion.setAutoCommit(true);//activa el autoguardado
+            } catch (SQLException e) {
+                throw new PersistenciaException("Error. Al reiniciar el Autocommit",e);
+            }
+        }
 
-}
+    }
 
 
 

@@ -67,7 +67,7 @@ private TipoCajon tipoCajon;
     }
 
 public BigDecimal calcularSubtotal(){
-        if(this== null || cantidadUnidades <+0){
+        if(this== null || cantidadUnidades <=0){
             return BigDecimal.ZERO;
 
         }return precioUnitario.multiply (BigDecimal.valueOf(cantidadUnidades));
