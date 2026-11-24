@@ -69,12 +69,20 @@ public class ServicioPedidos {
             throw new ReglaNegocioException("La cantidad de cajones no puede ser negativa.");
         }
 
+        if (cantidadCajones > 0 && (tipoCajon == null || tipoCajon.getId() == null || tipoCajon.getId().isBlank())) {
+            throw new ReglaNegocioException("Debe indicar el tipo de cajón.");
+        }
+
         BigDecimal precioFinal = (precioUnitarioPactado != null)
                 ? precioUnitarioPactado
                 : presentacion.getPrecioLlenado();
 
         if (precioFinal == null || precioFinal.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ReglaNegocioException("El precio unitario pactado debe ser mayor a cero.");
+        }
+
+        if (precioFinal.scale() > 2) {
+            throw new ReglaNegocioException("El precio debe tener como máximo dos decimales.");
         }
 
         DetallePedido detalle = new DetallePedido(

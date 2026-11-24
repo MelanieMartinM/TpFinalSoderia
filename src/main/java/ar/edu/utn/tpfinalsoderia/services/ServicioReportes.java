@@ -25,7 +25,7 @@ public class ServicioReportes {
         private final String tipoCajonDesc;
         private int saldoActual;
 
-        public FilaSaldoCajonCliente(
+        public FilaSaldoACajonCliente(
                 String clienteId,
                 String clienteNombre,
                 String tipoCajonId,
@@ -78,38 +78,15 @@ public class ServicioReportes {
 
     public List<FilaSaldoCajonCliente> obtenerReporteSaldosCajonesPorCliente() {
         List<FilaSaldoCajonCliente> resultado = new ArrayList<>();
-        List<MovimientoCajon> movimientos = inventarioRepo.listarMovimientosCajones();
-
-        for (MovimientoCajon mov : movimientos) {
-            if (mov == null) {
-                continue;
-            }
-            Cliente cli = mov.getCliente();
-            if (cli == null || cli.getId() == null || cli.getId().isBlank()) {
-                continue;
-            }
-            if (mov.getTipoCajon() == null || mov.getTipoCajon().getId() == null || mov.getTipoCajon().getId().isBlank()) {
-                continue;
-            }
-
-            String tipoId = mov.getTipoCajon().getId();
-            FilaSaldoCajonCliente filaExistente = buscarFila(resultado, cli.getId(), tipoId);
-
-            if (filaExistente == null) {
-                String nombreCliente = (cli.getNombre() != null && !cli.getNombre().isBlank())
-                        ? cli.getNombre()
-                        : cli.getId();
-                String descTipo = (mov.getTipoCajon().getDescripcion() != null && !mov.getTipoCajon().getDescripcion().isBlank())
-                        ? mov.getTipoCajon().getDescripcion()
-                        : tipoId;
-
-                filaExistente = new FilaSaldoCajonCliente(cli.getId(), nombreCliente, tipoId, descTipo, 0);
-                resultado.add(filaExistente);
-            }
-
-            filaExistente.sumarMovimiento(mov.getCantidad(), mov.isEsRetorno());
+        for (ar.edu.utn.tpfinalsoderia.models.StockCajon stock : inventarioRepo.listarStockCajones()) {
+            Cliente titular = stock.getTitular();
+            if (titular == null || stock.getTipo() == null) continue;
+            String nombre = titular.getNombre() == null ? titular.getId() : titular.getNombre();
+            String descripcion = stock.getTipo().getDescripcion() == null
+                    ? stock.getTipo().getId() : stock.getTipo().getDescripcion();
+            resultado.add(new FilaSaldoCajonCliente(titular.getId(), nombre,
+                    stock.getTipo().getId(), descripcion, stock.getDisponibles()));
         }
-
         return resultado;
     }
 
@@ -122,15 +99,15 @@ public class ServicioReportes {
         return null;
     }
 
-    public float calcularTotalCobrado() {
-        float total = 0f;
+    public java.math.BigDecimal calcularTotalCobrado() {
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
 
         String sql = "SELECT COALESCE(SUM(monto), 0) AS total_cobrado FROM cobros WHERE sin_cobro_autorizado = FALSE";
 
         try (PreparedStatement ps = conexion.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                total = rs.getFloat("total_cobrado");
+                total = rs.getBigDecimal("total_cobrado");
             }
         } catch (SQLException e) {
             throw new PersistenciaException("Error al calcular el total cobrado", e);
