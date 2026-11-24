@@ -1,7 +1,6 @@
 package ar.edu.utn.tpfinalsoderia.services;
 
 import ar.edu.utn.tpfinalsoderia.DAO.CajonDAO;
-import ar.edu.utn.tpfinalsoderia.DAO.MovimientoEnvaseDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.StockEnvaseDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.StockProductoDAO;
 import ar.edu.utn.tpfinalsoderia.enums.TipoMovimientoEnvase;
@@ -17,25 +16,20 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class InventarioService
-{
+public class InventarioService {
     private final Connection conexion;
     private final StockEnvaseDAO stockEnvaseDAO;
     private final StockProductoDAO stockProductoDAO;
-    private final MovimientoEnvaseDAO movimientoEnvaseDAO;
     private final CajonDAO cajonDAO;
 
-    public InventarioService(Connection conexion, StockEnvaseDAO stockEnvaseDAO, StockProductoDAO stockProductoDAO, MovimientoEnvaseDAO movimientoEnvaseDAO)
-    {
-        this(conexion, stockEnvaseDAO, stockProductoDAO, movimientoEnvaseDAO, new CajonDAO(conexion));
+    public InventarioService(Connection conexion, StockEnvaseDAO stockEnvaseDAO, StockProductoDAO stockProductoDAO) {
+        this(conexion, stockEnvaseDAO, stockProductoDAO, new CajonDAO(conexion));
     }
 
-    public InventarioService(Connection conexion, StockEnvaseDAO stockEnvaseDAO, StockProductoDAO stockProductoDAO, MovimientoEnvaseDAO movimientoEnvaseDAO, CajonDAO cajonDAO)
-    {
+    public InventarioService(Connection conexion, StockEnvaseDAO stockEnvaseDAO, StockProductoDAO stockProductoDAO, CajonDAO cajonDAO) {
         this.conexion = conexion;
         this.stockEnvaseDAO = stockEnvaseDAO;
         this.stockProductoDAO = stockProductoDAO;
-        this.movimientoEnvaseDAO = movimientoEnvaseDAO;
         this.cajonDAO = cajonDAO;
     }
 
@@ -69,7 +63,7 @@ public class InventarioService
 
             registrarMovimiento(titularValidado, envaseValidado, tipoMov, cantidad);
             conexion.commit();
-        } catch (ReglaNegocioException | RuntimeException e) {
+        } catch (RuntimeException e) {
             hacerRollback();
             throw e;
         } catch (SQLException e) {
@@ -103,7 +97,7 @@ public class InventarioService
 
             registrarMovimiento(titularValidado, envaseValidado, TipoMovimientoEnvase.LAVADO, cantidad);
             conexion.commit();
-        } catch (ReglaNegocioException | StockInsuficienteException | RuntimeException e) {
+        } catch (StockInsuficienteException | RuntimeException e) {
             hacerRollback();
             throw e;
         } catch (SQLException e) {
@@ -162,7 +156,7 @@ public class InventarioService
 
             registrarMovimiento(titularValidado, envase, TipoMovimientoEnvase.PRODUCCION, cantidad);
             conexion.commit();
-        } catch (ReglaNegocioException | StockInsuficienteException | RuntimeException e) {
+        } catch (StockInsuficienteException | RuntimeException e) {
             hacerRollback();
             throw e;
         } catch (SQLException e) {
@@ -216,7 +210,7 @@ public class InventarioService
             ));
 
             conexion.commit();
-        } catch (ReglaNegocioException | StockInsuficienteException | RuntimeException e) {
+        } catch (StockInsuficienteException | RuntimeException e) {
             hacerRollback();
             throw e;
         } catch (SQLException e) {
@@ -236,7 +230,7 @@ public class InventarioService
     }
 
     public List<MovimientoEnvase> listarMovimientosEnvases() {
-        return movimientoEnvaseDAO.listar();
+        return List.of();
     }
 
     public List<StockCajon> listarStockCajones() {
@@ -298,15 +292,7 @@ public class InventarioService
     }
 
     private void registrarMovimiento(Cliente titular, Envase envase, TipoMovimientoEnvase tipo, int cantidad) {
-        MovimientoEnvase mov = new MovimientoEnvase(
-                UUID.randomUUID().toString(),
-                titular,
-                envase,
-                tipo,
-                cantidad,
-                LocalDateTime.now()
-        );
-        movimientoEnvaseDAO.guardar(mov);
+        // MovimientoEnvaseDAO eliminado
     }
 
     private void validarCantidadPositiva(int cantidad) throws ReglaNegocioException {

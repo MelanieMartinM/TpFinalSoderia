@@ -1,7 +1,6 @@
 package ar.edu.utn.tpfinalsoderia.controllers;
 
 import ar.edu.utn.tpfinalsoderia.DAO.ConexionFactory;
-import ar.edu.utn.tpfinalsoderia.DAO.MovimientoEnvaseDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.StockEnvaseDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.StockProductoDAO;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
@@ -19,7 +18,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 
-public class InventarioController {
+public class InventarioController
+{
 
     private static final String OP_RECEPCION = "1. Recepción de Envases Vacíos (Sucios)";
     private static final String OP_DEVOLUCION = "2. Devolución de Envases Vacíos (Retorno)";
@@ -95,7 +95,6 @@ public class InventarioController {
                     conexion,
                     new StockEnvaseDAO(conexion),
                     new StockProductoDAO(conexion),
-                    new MovimientoEnvaseDAO(conexion)
             );
             cargarDatosTablas();
         } catch (SQLException | IllegalStateException e) {
