@@ -73,6 +73,7 @@ public class InventarioController {
 
     @FXML private TableView<StockCajon> tblStockCajones;
     @FXML private TableColumn<StockCajon, String> colCajonTipo;
+    @FXML private TableColumn<StockCajon, String> colCajonTitular;
     @FXML private TableColumn<StockCajon, Number> colCajonCapacidad;
     @FXML private TableColumn<StockCajon, Number> colCajonDisponibles;
 
@@ -94,6 +95,9 @@ public class InventarioController {
         cmbOpCajon.setItems(FXCollections.observableArrayList(CAJON_INGRESO_DEVOLUCION, CAJON_ENTREGA_SALIDA));
         cmbOpCajon.getSelectionModel().selectFirst();
 
+        chkEsFason.setSelected(true);
+        chkEsFason.setDisable(true);
+        txtClienteId.setDisable(false);
         configurarColumnas();
         inicializarServicio();
     }
@@ -110,11 +114,11 @@ public class InventarioController {
     }
 
     private String formatearTitular(Cliente titular) {
-        if (titular == null) return "Fábrica";
+        if (titular == null) return "Sin titular";
         String nombre = (titular.getNombre() != null && !titular.getNombre().isBlank())
                 ? titular.getNombre()
                 : titular.getId();
-        return "Fasón - " + nombre;
+        return nombre;
     }
 
     private void configurarColumnas() {
@@ -150,13 +154,14 @@ public class InventarioController {
         ));
         colMovCantidad.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getCantidad()));
 
+        colCajonTitular.setCellValueFactory(data -> new SimpleStringProperty(formatearTitular(data.getValue().getTitular())));
         colCajonTipo.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getTipo() != null ? data.getValue().getTipo().getDescripcion() : "-"
         ));
         colCajonCapacidad.setCellValueFactory(data -> new SimpleIntegerProperty(
                 data.getValue().getTipo() != null ? data.getValue().getTipo().getCapacidad() : 0
         ));
-        colCajonDisponibles.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getDisponiblesFabrica()));
+        colCajonDisponibles.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getDisponibles()));
 
         colMovCajonFecha.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getFecha() != null ? data.getValue().getFecha().format(fmt) : "-"
@@ -165,7 +170,7 @@ public class InventarioController {
                 data.getValue().isEsRetorno() ? "DEVOLUCIÓN / INGRESO" : "ENTREGA / SALIDA"
         ));
         colMovCajonCliente.setCellValueFactory(data -> new SimpleStringProperty(
-                data.getValue().getCliente() != null ? data.getValue().getCliente().getNombre() : "Fábrica"
+                data.getValue().getCliente() != null ? data.getValue().getCliente().getNombre() : "Sin titular"
         ));
         colMovCajonTipo.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getTipoCajon() != null ? data.getValue().getTipoCajon().getDescripcion() : "-"
@@ -304,9 +309,9 @@ public class InventarioController {
         txtEnvaseId.clear();
         txtPresentacionId.clear();
         txtCantidad.clear();
-        chkEsFason.setSelected(false);
+        chkEsFason.setSelected(true);
         txtClienteId.clear();
-        txtClienteId.setDisable(true);
+        txtClienteId.setDisable(false);
         actualizarCamposSegunOperacion();
     }
 

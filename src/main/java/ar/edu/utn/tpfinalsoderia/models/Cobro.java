@@ -2,12 +2,13 @@ package ar.edu.utn.tpfinalsoderia.models;
 
 import ar.edu.utn.tpfinalsoderia.enums.MedioDePago;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Cobro
 {
     private String id;
-    private float monto;
+    private BigDecimal monto;
     private MedioDePago medioPago;
     private LocalDateTime fecha;
     private boolean sinCobroAutorizado;
@@ -19,7 +20,7 @@ public class Cobro
 
     }
 
-    public Cobro(String id, float monto, MedioDePago medioPago, LocalDateTime fecha, boolean sinCobroAutorizado, String responsableAutorizacion, String motivoAutorizacion)
+    public Cobro(String id, BigDecimal monto, MedioDePago medioPago, LocalDateTime fecha, boolean sinCobroAutorizado, String responsableAutorizacion, String motivoAutorizacion)
     {
         this.id = id;
         this.monto = monto;
@@ -32,8 +33,8 @@ public class Cobro
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-    public float getMonto() { return monto; }
-    public void setMonto(float monto) { this.monto = monto; }
+    public BigDecimal getMonto() { return monto; }
+    public void setMonto(BigDecimal monto) { this.monto = monto; }
     public MedioDePago getMedioPago() { return medioPago; }
     public void setMedioPago(MedioDePago medioPago) { this.medioPago = medioPago; }
     public LocalDateTime getFecha() { return fecha; }

@@ -28,17 +28,17 @@ public class MarcaRepositoryJdbc extends RepositorioJdbc<Marca> {
         conectar();
     }
 
-            private void conectar()throws PersistenciaException{
+    private void conectar()throws PersistenciaException{
 
         try{
-this.conexion=ConexionFactory.abrirConexion();
+            this.conexion=ConexionFactory.abrirConexion();
 
 
         } catch (SQLException e) {
             throw new PersistenciaException("Error no se pudo conectar a la base de datos",e);
         }
 
-            }
+    }
 
 
 
@@ -50,13 +50,13 @@ this.conexion=ConexionFactory.abrirConexion();
         marca.setNombre(resultado.getString("nombre"));
         marca.setEsPropiaFabrica(resultado.getBoolean("es_propia_fabrica"));
 
-    String  idtitular= resultado.getString("titular_id");
-    if(idtitular!=null){
-        Cliente titular=new Cliente();
-        titular.setId(idtitular);
-        marca.setTitular(titular);
-    }
-return marca;
+        String  idtitular= resultado.getString("titular_id");
+        if(idtitular!=null){
+            Cliente titular=new Cliente();
+            titular.setId(idtitular);
+            marca.setTitular(titular);
+        }
+        return marca;
     }
 
     @Override
@@ -87,20 +87,20 @@ return marca;
     @Override
     public Marca buscarPorId(String id) throws PersistenciaException{
         try(PreparedStatement ps =conexion.prepareStatement(SQL_BUSCAR_POR_ID)){
-ps.setString(1,id);
-try(ResultSet rs=ps.executeQuery()){
-    if(rs.next()){
-        return mapear(rs);
-    }
-    return null;}
-}catch (SQLException e){
-    throw new PersistenciaException("Error al buscar marca id:"+id,e);
-
-}
-
-
+            ps.setString(1,id);
+            try(ResultSet rs=ps.executeQuery()){
+                if(rs.next()){
+                    return mapear(rs);
+                }
+                return null;}
+        }catch (SQLException e){
+            throw new PersistenciaException("Error al buscar marca id:"+id,e);
 
         }
+
+
+
+    }
     @Override
     public List<Marca> listar() throws PersistenciaException {
         List<Marca> marcas = new ArrayList<>();
@@ -143,13 +143,17 @@ try(ResultSet rs=ps.executeQuery()){
     public void eliminar(String id) throws PersistenciaException {
         try (PreparedStatement ps= conexion.prepareStatement(SQL_BAJA_LOGICA)){
 
-                ps.setString(1, id);
-                ps.executeUpdate();
+            ps.setString(1, id);
+            ps.executeUpdate();
 
-            } catch (SQLException e){
+        } catch (SQLException e){
             throw new PersistenciaException("Error al dar de baja logica la marca id: " + id,e);
         }
-        }
-
     }
+
+    @Override
+    public void desactivar(String id) {
+        eliminar(id); // Para esta entidad, eliminar ya realiza la baja lógica.
+    }
+}
 

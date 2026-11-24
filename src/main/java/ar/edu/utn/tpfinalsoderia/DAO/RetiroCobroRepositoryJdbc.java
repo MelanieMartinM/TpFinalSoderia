@@ -26,6 +26,8 @@ public class RetiroCobroRepositoryJdbc {
         this.conexion = Objects.requireNonNull(conexion, "La conexión no puede ser nula.");
     }
 
+    public Connection getConexion() { return conexion; }
+
     public void guardarRetiro(Retiro retiro) {
         Objects.requireNonNull(retiro, "El retiro no puede ser nulo.");
 
@@ -54,7 +56,7 @@ public class RetiroCobroRepositoryJdbc {
             }
 
             ps.setTimestamp(4, Timestamp.valueOf(retiro.getFecha()));
-            ps.setFloat(5, retiro.calcularTotal());
+            ps.setBigDecimal(5, retiro.calcularTotal());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new PersistenciaException("Error al guardar el retiro", e);
@@ -104,7 +106,7 @@ public class RetiroCobroRepositoryJdbc {
 
             ps.setInt(6, det.getCantidadPedida());
             ps.setInt(7, det.getCantidadRetirada());
-            ps.setFloat(8, det.getPrecioAplicado());
+            ps.setBigDecimal(8, det.getPrecioAplicado());
 
             if (det.getTipoCajon() != null && det.getTipoCajon().getId() != null && !det.getTipoCajon().getId().isBlank()) {
                 ps.setString(9, det.getTipoCajon().getId());
@@ -136,7 +138,7 @@ public class RetiroCobroRepositoryJdbc {
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, cobro.getId());
             ps.setString(2, retiroId);
-            ps.setFloat(3, cobro.getMonto());
+            ps.setBigDecimal(3, cobro.getMonto());
             ps.setString(4, cobro.getMedioPago() != null ? cobro.getMedioPago().name() : null);
             ps.setTimestamp(5, Timestamp.valueOf(cobro.getFecha()));
             ps.setBoolean(6, cobro.isSinCobroAutorizado());
@@ -186,7 +188,7 @@ public class RetiroCobroRepositoryJdbc {
 
                 Cobro c = new Cobro(
                         rs.getString("id"),
-                        rs.getFloat("monto"),
+                        rs.getBigDecimal("monto"),
                         medio,
                         fecha,
                         rs.getBoolean("sin_cobro_autorizado"),

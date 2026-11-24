@@ -8,7 +8,7 @@ import ar.edu.utn.tpfinalsoderia.models.Cobro;
 import ar.edu.utn.tpfinalsoderia.models.StockEnvase;
 import ar.edu.utn.tpfinalsoderia.services.ServicioReportes;
 import ar.edu.utn.tpfinalsoderia.services.ServicioReportes.FilaSaldoCajonCliente;
-import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -69,7 +69,7 @@ public class ReportesController {
 
     private void configurarColumnas() {
         colRepEnvTitular.setCellValueFactory(data -> new SimpleStringProperty(
-                data.getValue().getTitular() != null ? data.getValue().getTitular().getNombre() : "Fábrica"
+                data.getValue().getTitular() != null ? data.getValue().getTitular().getNombre() : "Sin titular"
         ));
         colRepEnvDesc.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getEnvase() != null ? data.getValue().getEnvase().getDescripcion() : "-"
@@ -88,7 +88,7 @@ public class ReportesController {
         colRepCobMedio.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getMedioPago() != null ? data.getValue().getMedioPago().name() : "-"
         ));
-        colRepCobMonto.setCellValueFactory(data -> new SimpleFloatProperty(data.getValue().getMonto()));
+        colRepCobMonto.setCellValueFactory(data -> new SimpleObjectProperty<Number>(data.getValue().getMonto()));
         colRepCobEstado.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().isSinCobroAutorizado()
                         ? "Autorizado sin cobro (" + data.getValue().getResponsableAutorizacion() + ")"

@@ -8,11 +8,12 @@ import java.util.Objects;
 
 public class DetallePedido {
 
-private Presentacion presentacion;
-private int cantidadUnidades;
-private BigDecimal precioUnitario;
-private int cantidadCajones;
-private TipoCajon tipoCajon;
+    private String id;
+    private Presentacion presentacion;
+    private int cantidadUnidades;
+    private BigDecimal precioUnitario;
+    private int cantidadCajones;
+    private TipoCajon tipoCajon;
 
 
     public DetallePedido() {
@@ -25,6 +26,10 @@ private TipoCajon tipoCajon;
         this.cantidadCajones = cantCajones;
         this.tipoCajon = tipoCajon;
     }
+
+    public String getId() { return id; }
+
+    public void setId(String id) { this.id = id; }
 
     public Presentacion getPresentacion() {
         return presentacion;
@@ -66,12 +71,12 @@ private TipoCajon tipoCajon;
         this.tipoCajon = tipoCajon;
     }
 
-public BigDecimal calcularSubtotal(){
+    public BigDecimal calcularSubtotal(){
         if(this== null || cantidadUnidades <=0){
             return BigDecimal.ZERO;
 
         }return precioUnitario.multiply (BigDecimal.valueOf(cantidadUnidades));
-}
+    }
 
     @Override
     public boolean equals(Object o) {
