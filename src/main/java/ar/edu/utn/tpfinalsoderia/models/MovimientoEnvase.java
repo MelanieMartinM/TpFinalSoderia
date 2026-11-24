@@ -3,10 +3,10 @@ package ar.edu.utn.tpfinalsoderia.models;
 import ar.edu.utn.tpfinalsoderia.enums.TipoMovimientoEnvase;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-public class MovimientoEnvase
-{
-    private int id;
+public class MovimientoEnvase {
+    private String id;
     private Cliente titular;
     private Envase envase;
     private TipoMovimientoEnvase tipo;
@@ -15,7 +15,7 @@ public class MovimientoEnvase
 
     public MovimientoEnvase() {}
 
-    public MovimientoEnvase(int id, Cliente titular, Envase envase, TipoMovimientoEnvase tipo, int cantidad, LocalDateTime fecha) {
+    public MovimientoEnvase(String id, Cliente titular, Envase envase, TipoMovimientoEnvase tipo, int cantidad, LocalDateTime fecha) {
         this.id = id;
         this.titular = titular;
         this.envase = envase;
@@ -24,8 +24,8 @@ public class MovimientoEnvase
         this.fecha = fecha;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public Cliente getTitular() { return titular; }
     public void setTitular(Cliente titular) { this.titular = titular; }
     public Envase getEnvase() { return envase; }
@@ -36,4 +36,16 @@ public class MovimientoEnvase
     public void setCantidad(int cantidad) { this.cantidad = cantidad; }
     public LocalDateTime getFecha() { return fecha; }
     public void setFecha(LocalDateTime fecha) { this.fecha = fecha; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MovimientoEnvase other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

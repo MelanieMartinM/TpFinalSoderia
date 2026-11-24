@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ar.edu.utn.tpfinalsoderia.controllers.InventarioController"
+            prefWidth="980.0" prefHeight="680.0">
+
+    <top>
+        <VBox spacing="5.0" style="-fx-background-color: #1e3a5f; -fx-padding: 15;">
+            <Label text="Gestión de Inventario, Producción y Cajones - Sodería"
+                   style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <Label text="Control de envases vacíos (sucios / aptos), lavado, producción y movimiento de cajones"
+                   style="-fx-text-fill: #d0e1f9; -fx-font-size: 12px;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <Tab text="Movimientos de Planta">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+
+                    <TitledPane text="Registrar Operación de Inventario" collapsible="false">
+                        <GridPane hgap="15.0" vgap="12.0">
+                            <padding>
+                                <Insets top="15" right="15" bottom="15" left="15"/>
+                            </padding>
+
+                            <Label text="Tipo de Operación:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <ComboBox fx:id="cmbOperacion" prefWidth="310.0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                            <Label text="Titular (Fábrica o Cliente Fasón):" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                                <CheckBox fx:id="chkEsFason" text="Es Fasón (Cliente)" onAction="#onToggleFason"/>
+                                <TextField fx:id="txtClienteId" promptText="ID Cliente (ej: C001)" disable="true" prefWidth="170.0"/>
+                            </HBox>
+
+                            <Label text="ID Envase (Recepción / Devolución / Lavado):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtEnvaseId" promptText="Ej: ENV-SIF-1250" prefWidth="310.0" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                            <Label text="ID Presentación (solo Producción):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtPresentacionId" promptText="Ej: PRES-001" disable="true" prefWidth="310.0" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                            <Label text="Cantidad:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtCantidad" promptText="Cantidad de unidades" prefWidth="310.0" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                            <HBox spacing="10.0" GridPane.rowIndex="5" GridPane.columnIndex="1">
+                                <Button text="Confirmar Operación" onAction="#onConfirmarOperacion"
+                                        style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16;"/>
+                                <Button text="Limpiar" onAction="#onLimpiarFormulario"
+                                        style="-fx-padding: 8 16;"/>
+                            </HBox>
+                        </GridPane>
+                    </TitledPane>
+
+                    <Label fx:id="lblEstado" text="" style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
+                </VBox>
+            </Tab>
+
+            <Tab text="Stock Actual">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15"/>
+                    </padding>
+
+                    <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                        <Button text="Actualizar Tablas" onAction="#cargarDatosTablas"
+                                style="-fx-background-color: #1565c0; -fx-text-fill: white; -fx-padding: 6 14;"/>
+                    </HBox>
+
+                    <Label text="Stock de Envases Vacíos (Aptos vs. Sucios)" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <TableView fx:id="tblStockEnvases" prefHeight="220.0">
+                        <columns>
+                            <TableColumn fx:id="colEnvTitular" text="Titular" prefWidth="200.0"/>
+                            <TableColumn fx:id="colEnvCodigo" text="Envase" prefWidth="260.0"/>
+                            <TableColumn fx:id="colEnvAptos" text="Aptos (Limpios)" prefWidth="160.0"/>
+                            <TableColumn fx:id="colEnvSucios" text="Sucios (A lavar)" prefWidth="160.0"/>
+                        </columns>
+                    </TableView>
+
+                    <Label text="Stock de Productos Llenos Disponibles" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <TableView fx:id="tblStockProductos" prefHeight="220.0">
+                        <columns>
+                            <TableColumn fx:id="colProdTitular" text="Titular" prefWidth="200.0"/>
+                            <TableColumn fx:id="colProdPresentacion" text="Presentación" prefWidth="320.0"/>
+                            <TableColumn fx:id="colProdDisponibles" text="Disponibles" prefWidth="200.0"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab text="Gestión de Cajones">
+                <VBox spacing="12.0">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15"/>
+                    </padding>
+
+                    <TitledPane text="Registrar Movimiento de Cajones" collapsible="false">
+                        <GridPane hgap="12.0" vgap="10.0">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10"/>
+                            </padding>
+                            <Label text="Operación:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <ComboBox fx:id="cmbOpCajon" prefWidth="240.0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                            <Label text="ID Tipo Cajón:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                            <TextField fx:id="txtCajonTipoId" promptText="Ej: CAJ-12" prefWidth="140.0" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                            <Label text="ID Cliente/Repartidor:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtCajonClienteId" promptText="Opcional si es alta en fábrica" prefWidth="240.0" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                            <Label text="Cantidad:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                            <TextField fx:id="txtCajonCantidad" promptText="Cantidad" prefWidth="140.0" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                            <Button text="Registrar Cajones" onAction="#onConfirmarCajon"
+                                    style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-weight: bold;"
+                                    GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        </GridPane>
+                    </TitledPane>
+
+                    <Label fx:id="lblEstadoCajon" text=""/>
+
+                    <Label text="Stock de Cajones en Fábrica" style="-fx-font-weight: bold;"/>
+                    <TableView fx:id="tblStockCajones" prefHeight="150.0">
+                        <columns>
+                            <TableColumn fx:id="colCajonTipo" text="Tipo de Cajón" prefWidth="320.0"/>
+                            <TableColumn fx:id="colCajonCapacidad" text="Capacidad (botellas)" prefWidth="180.0"/>
+                            <TableColumn fx:id="colCajonDisponibles" text="Disponibles Fábrica" prefWidth="180.0"/>
+                        </columns>
+                    </TableView>
+
+                    <Label text="Historial de Movimientos de Cajones" style="-fx-font-weight: bold;"/>
+                    <TableView fx:id="tblMovCajones" prefHeight="170.0">
+                        <columns>
+                            <TableColumn fx:id="colMovCajonFecha" text="Fecha" prefWidth="150.0"/>
+                            <TableColumn fx:id="colMovCajonTipoOp" text="Operación" prefWidth="180.0"/>
+                            <TableColumn fx:id="colMovCajonCliente" text="Repartidor / Cliente" prefWidth="200.0"/>
+                            <TableColumn fx:id="colMovCajonTipo" text="Tipo Cajón" prefWidth="220.0"/>
+                            <TableColumn fx:id="colMovCajonCant" text="Cantidad" prefWidth="110.0"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab text="Historial de Envases">
+                <VBox spacing="10.0">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15"/>
+                    </padding>
+                    <TableView fx:id="tblMovimientos" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colMovFecha" text="Fecha y Hora" prefWidth="180.0"/>
+                            <TableColumn fx:id="colMovTipo" text="Tipo Movimiento" prefWidth="160.0"/>
+                            <TableColumn fx:id="colMovTitular" text="Titular" prefWidth="200.0"/>
+                            <TableColumn fx:id="colMovEnvase" text="Envase" prefWidth="220.0"/>
+                            <TableColumn fx:id="colMovCantidad" text="Cantidad" prefWidth="120.0"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>

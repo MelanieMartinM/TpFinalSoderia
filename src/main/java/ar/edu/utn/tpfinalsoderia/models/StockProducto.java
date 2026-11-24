@@ -2,16 +2,17 @@ package ar.edu.utn.tpfinalsoderia.models;
 
 import ar.edu.utn.tpfinalsoderia.exceptions.StockInsuficienteException;
 
-public class StockProducto
-{
-    private int id;
+import java.util.Objects;
+
+public class StockProducto {
+    private String id;
     private Cliente titular;
     private Presentacion presentacion;
     private int disponibles;
 
     public StockProducto() {}
 
-    public StockProducto(int id, Cliente titular, Presentacion presentacion, int disponibles) {
+    public StockProducto(String id, Cliente titular, Presentacion presentacion, int disponibles) {
         this.id = id;
         this.titular = titular;
         this.presentacion = presentacion;
@@ -29,12 +30,24 @@ public class StockProducto
         this.disponibles -= cantidad;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public Cliente getTitular() { return titular; }
     public void setTitular(Cliente titular) { this.titular = titular; }
     public Presentacion getPresentacion() { return presentacion; }
     public void setPresentacion(Presentacion presentacion) { this.presentacion = presentacion; }
     public int getDisponibles() { return disponibles; }
     public void setDisponibles(int disponibles) { this.disponibles = disponibles; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StockProducto other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
