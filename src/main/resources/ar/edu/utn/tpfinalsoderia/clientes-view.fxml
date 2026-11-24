@@ -27,15 +27,6 @@
 
     <GridPane hgap="12" vgap="10">
 
-        <Label text="ID:"
-               GridPane.columnIndex="0"
-               GridPane.rowIndex="0"/>
-
-        <TextField fx:id="campoId"
-                   promptText="Ejemplo: CLI-001"
-                   GridPane.columnIndex="1"
-                   GridPane.rowIndex="0"/>
-
         <Label text="Nombre:"
                GridPane.columnIndex="0"
                GridPane.rowIndex="1"/>
@@ -91,10 +82,6 @@
                prefHeight="260">
 
         <columns>
-
-            <TableColumn fx:id="columnaId"
-                         text="ID"
-                         prefWidth="100"/>
 
             <TableColumn fx:id="columnaNombre"
                          text="Nombre"

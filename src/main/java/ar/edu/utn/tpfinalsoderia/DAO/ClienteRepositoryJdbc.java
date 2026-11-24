@@ -18,6 +18,10 @@ public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
 
     }
 
+    public ClienteRepositoryJdbc(Connection conexion) {
+        super(java.util.Objects.requireNonNull(conexion, "La conexión es obligatoria."));
+    }
+
     private void conectar() throws PersistenciaException {
         try {
             this.conexion = ConexionFactory.abrirConexion();
@@ -42,6 +46,9 @@ public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
 
     @Override
     public void guardar(Cliente cliente) {
+        if (cliente != null && (cliente.getId() == null || cliente.getId().isBlank())) {
+            cliente.setId(java.util.UUID.randomUUID().toString());
+        }
         String sql = "INSERT INTO clientes "
                 + "(id, nombre, telefono, direccion, activo) "
                 + "VALUES (?, ?, ?, ?, ?)";

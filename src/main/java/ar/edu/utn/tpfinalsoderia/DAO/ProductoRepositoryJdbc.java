@@ -13,11 +13,11 @@ public class ProductoRepositoryJdbc extends RepositorioJdbc<Producto>{
 
 
 
- private static final String SQL_INSERTAR = "INSERT INTO productos (id,nombre,tipo_producto,activo ) VALUES(?,?,?,?)";
- private static final String SQL_ACTUALIZAR = "UPDATE productos SET nombre =?,tipo_producto=?,activo = ? where id =?";
- private static final String SQL_BAJA_LOGICA = "UPDATE  productos SET activo = FALSE where id=?";
- private static final String SQL_BUSCAR_POR_ID = "SELECT id,nombre,tipo_producto,activo FROM productos where id =?";
- private static final String SQL_LISTAR_ACTIVOS = "SELECT id,nombre,tipo_producto,activo FROM productos where activo  = TRUE";
+    private static final String SQL_INSERTAR = "INSERT INTO productos (id,nombre,tipo_producto,activo ) VALUES(?,?,?,?)";
+    private static final String SQL_ACTUALIZAR = "UPDATE productos SET nombre =?,tipo_producto=?,activo = ? where id =?";
+    private static final String SQL_BAJA_LOGICA = "UPDATE  productos SET activo = FALSE where id=?";
+    private static final String SQL_BUSCAR_POR_ID = "SELECT id,nombre,tipo_producto,activo FROM productos where id =?";
+    private static final String SQL_LISTAR_ACTIVOS = "SELECT id,nombre,tipo_producto,activo FROM productos where activo  = TRUE";
 
 
     public ProductoRepositoryJdbc() throws PersistenciaException{
@@ -57,16 +57,18 @@ public class ProductoRepositoryJdbc extends RepositorioJdbc<Producto>{
 
 
     public void guardar(Producto producto) throws PersistenciaException {
-try(PreparedStatement ps =conexion.prepareStatement(SQL_INSERTAR)){
-    ps.setString(1,producto.getId());
-    ps.setString(2, producto.getNombre());
-    ps.setString(3, producto.getTipoProducto().name());
-    ps.setBoolean(4, producto.isActivo());
-    ps.executeUpdate();
+        if (producto != null && (producto.getId() == null || producto.getId().isBlank()))
+            producto.setId(java.util.UUID.randomUUID().toString());
+        try(PreparedStatement ps =conexion.prepareStatement(SQL_INSERTAR)){
+            ps.setString(1,producto.getId());
+            ps.setString(2, producto.getNombre());
+            ps.setString(3, producto.getTipoProducto().name());
+            ps.setBoolean(4, producto.isActivo());
+            ps.executeUpdate();
 
-} catch (SQLException e) {
-    throw new PersistenciaException("Error al guardar el producto id: "+producto.getId(),e);
-}
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al guardar el producto id: "+producto.getId(),e);
+        }
     }
 
 
@@ -80,8 +82,8 @@ try(PreparedStatement ps =conexion.prepareStatement(SQL_INSERTAR)){
                 }
                 return null;
             }
-            }catch (SQLException e) {
-                throw new PersistenciaException("Error al buscar el producto id: "+ id ,e);
+        }catch (SQLException e) {
+            throw new PersistenciaException("Error al buscar el producto id: "+ id ,e);
 
 
         }
@@ -92,7 +94,7 @@ try(PreparedStatement ps =conexion.prepareStatement(SQL_INSERTAR)){
     public List<Producto> listar() throws PersistenciaException {
         List<Producto>productos = new ArrayList<>();
         try(PreparedStatement ps=conexion.prepareStatement(SQL_LISTAR_ACTIVOS);
-        ResultSet rs = ps.executeQuery()){
+            ResultSet rs = ps.executeQuery()){
             while(rs.next()){
                 productos.add(mapear(rs));
             } return productos;

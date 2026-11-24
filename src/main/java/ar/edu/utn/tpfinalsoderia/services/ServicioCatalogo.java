@@ -34,6 +34,8 @@ public class ServicioCatalogo {
     // --- Productos ---
 
     public void registrarProducto(Producto producto) throws PersistenciaException {
+        if (producto != null && (producto.getId() == null || producto.getId().isBlank()))
+            producto.setId(java.util.UUID.randomUUID().toString());
         validarProducto(producto);
         productoRepositoryJdbc.guardar(producto);
     }
@@ -67,6 +69,8 @@ public class ServicioCatalogo {
     // --- Marcas ---
 
     public void registrarMarca(Marca marca) throws PersistenciaException {
+        if (marca != null && (marca.getId() == null || marca.getId().isBlank()))
+            marca.setId(java.util.UUID.randomUUID().toString());
         validarMarca(marca);
         marcaRepositoryJdbc.guardar(marca);
     }

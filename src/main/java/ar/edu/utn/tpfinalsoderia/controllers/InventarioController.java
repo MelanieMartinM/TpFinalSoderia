@@ -2,6 +2,8 @@ package ar.edu.utn.tpfinalsoderia.controllers;
 
 import ar.edu.utn.tpfinalsoderia.DAO.ConexionFactory;
 import ar.edu.utn.tpfinalsoderia.DAO.InventarioRepositoryJdbc;
+import ar.edu.utn.tpfinalsoderia.DAO.OpcionesJdbc;
+import ar.edu.utn.tpfinalsoderia.DAO.OpcionesJdbc.Opcion;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.exceptions.ReglaNegocioException;
 import ar.edu.utn.tpfinalsoderia.exceptions.StockInsuficienteException;
@@ -13,6 +15,7 @@ import ar.edu.utn.tpfinalsoderia.models.Presentacion;
 import ar.edu.utn.tpfinalsoderia.models.StockCajon;
 import ar.edu.utn.tpfinalsoderia.models.StockEnvase;
 import ar.edu.utn.tpfinalsoderia.models.StockProducto;
+import ar.edu.utn.tpfinalsoderia.models.TipoCajon;
 import ar.edu.utn.tpfinalsoderia.services.ServicioInventario;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -40,16 +43,15 @@ public class InventarioController {
     private static final String CAJON_ENTREGA_SALIDA = "Entrega / Salida a Repartidor";
 
     @FXML private ComboBox<String> cmbOperacion;
-    @FXML private CheckBox chkEsFason;
-    @FXML private TextField txtClienteId;
-    @FXML private TextField txtEnvaseId;
-    @FXML private TextField txtPresentacionId;
+    @FXML private ComboBox<Opcion<Cliente>> cmbCliente;
+    @FXML private ComboBox<Opcion<Envase>> cmbEnvase;
+    @FXML private ComboBox<Opcion<Presentacion>> cmbPresentacion;
     @FXML private TextField txtCantidad;
     @FXML private Label lblEstado;
 
     @FXML private ComboBox<String> cmbOpCajon;
-    @FXML private TextField txtCajonTipoId;
-    @FXML private TextField txtCajonClienteId;
+    @FXML private ComboBox<Opcion<TipoCajon>> cmbCajonTipo;
+    @FXML private ComboBox<Opcion<Cliente>> cmbCajonCliente;
     @FXML private TextField txtCajonCantidad;
     @FXML private Label lblEstadoCajon;
 
@@ -85,6 +87,7 @@ public class InventarioController {
     @FXML private TableColumn<MovimientoCajon, Number> colMovCajonCant;
 
     private ServicioInventario servicioInventario;
+    private OpcionesJdbc opciones;
 
     @FXML
     public void initialize() {
@@ -95,9 +98,6 @@ public class InventarioController {
         cmbOpCajon.setItems(FXCollections.observableArrayList(CAJON_INGRESO_DEVOLUCION, CAJON_ENTREGA_SALIDA));
         cmbOpCajon.getSelectionModel().selectFirst();
 
-        chkEsFason.setSelected(true);
-        chkEsFason.setDisable(true);
-        txtClienteId.setDisable(false);
         configurarColumnas();
         inicializarServicio();
     }
@@ -107,8 +107,11 @@ public class InventarioController {
             Connection conexion = ConexionFactory.abrirConexion();
             InventarioRepositoryJdbc inventarioRepo = new InventarioRepositoryJdbc(conexion);
             this.servicioInventario = new ServicioInventario(conexion, inventarioRepo);
+            this.opciones = new OpcionesJdbc(conexion);
+            cargarOpciones();
+            actualizarCamposSegunOperacion();
             cargarDatosTablas();
-        } catch (SQLException | IllegalStateException e) {
+        } catch (SQLException | IllegalStateException | PersistenciaException e) {
             mostrarError(lblEstado, "Sin conexión a BD: " + e.getMessage());
         }
     }
@@ -117,7 +120,7 @@ public class InventarioController {
         if (titular == null) return "Sin titular";
         String nombre = (titular.getNombre() != null && !titular.getNombre().isBlank())
                 ? titular.getNombre()
-                : titular.getId();
+                : "Repartidor sin nombre";
         return nombre;
     }
 
@@ -125,7 +128,7 @@ public class InventarioController {
         colEnvTitular.setCellValueFactory(data -> new SimpleStringProperty(formatearTitular(data.getValue().getTitular())));
         colEnvCodigo.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getEnvase() != null
-                        ? (data.getValue().getEnvase().getDescripcion() != null ? data.getValue().getEnvase().getDescripcion() : data.getValue().getEnvase().getId())
+                        ? (data.getValue().getEnvase().getDescripcion() != null ? data.getValue().getEnvase().getDescripcion() : "Envase sin descripción")
                         : "-"
         ));
         colEnvAptos.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getAptos()));
@@ -134,7 +137,7 @@ public class InventarioController {
         colProdTitular.setCellValueFactory(data -> new SimpleStringProperty(formatearTitular(data.getValue().getTitular())));
         colProdPresentacion.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getPresentacion() != null
-                        ? (data.getValue().getPresentacion().getNombre() != null ? data.getValue().getPresentacion().getNombre() : data.getValue().getPresentacion().getId())
+                        ? (data.getValue().getPresentacion().getNombre() != null ? data.getValue().getPresentacion().getNombre() : "Presentación sin nombre")
                         : "-"
         ));
         colProdDisponibles.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getDisponibles()));
@@ -149,7 +152,7 @@ public class InventarioController {
         colMovTitular.setCellValueFactory(data -> new SimpleStringProperty(formatearTitular(data.getValue().getTitular())));
         colMovEnvase.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getEnvase() != null
-                        ? (data.getValue().getEnvase().getDescripcion() != null ? data.getValue().getEnvase().getDescripcion() : data.getValue().getEnvase().getId())
+                        ? (data.getValue().getEnvase().getDescripcion() != null ? data.getValue().getEnvase().getDescripcion() : "Envase sin descripción")
                         : "-"
         ));
         colMovCantidad.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getCantidad()));
@@ -179,24 +182,32 @@ public class InventarioController {
     }
 
     @FXML
-    private void onToggleFason() {
-        boolean esFason = chkEsFason.isSelected();
-        txtClienteId.setDisable(!esFason);
-        if (!esFason) {
-            txtClienteId.clear();
+    private void cargarOpciones() {
+        if (opciones == null) return;
+        try {
+            java.util.List<Opcion<Cliente>> clientes = opciones.clientes();
+            cmbCliente.setItems(FXCollections.observableArrayList(clientes));
+            cmbCajonCliente.setItems(FXCollections.observableArrayList(clientes));
+            cmbEnvase.setItems(FXCollections.observableArrayList(opciones.envases()));
+            cmbPresentacion.setItems(FXCollections.observableArrayList(opciones.presentaciones()));
+            cmbCajonTipo.setItems(FXCollections.observableArrayList(opciones.tiposCajon()));
+        } catch (PersistenciaException e) {
+            mostrarError(lblEstado, e.getMessage());
         }
     }
 
     private void actualizarCamposSegunOperacion() {
-        String op = cmbOperacion.getValue();
-        boolean esProduccion = OP_PRODUCCION.equals(op);
-        txtPresentacionId.setDisable(!esProduccion);
-        txtEnvaseId.setDisable(esProduccion);
-        if (esProduccion) {
-            txtEnvaseId.clear();
-        } else {
-            txtPresentacionId.clear();
-        }
+        boolean esProduccion = OP_PRODUCCION.equals(cmbOperacion.getValue());
+        cmbPresentacion.setDisable(!esProduccion);
+        cmbEnvase.setDisable(esProduccion);
+        if (esProduccion) cmbEnvase.getSelectionModel().clearSelection();
+        else cmbPresentacion.getSelectionModel().clearSelection();
+    }
+
+    private <T> T valorSeleccionado(ComboBox<Opcion<T>> combo, String mensaje) throws ReglaNegocioException {
+        Opcion<T> opcion = combo.getValue();
+        if (opcion == null) throw new ReglaNegocioException(mensaje);
+        return opcion.getValor();
     }
 
     @FXML
@@ -208,44 +219,25 @@ public class InventarioController {
 
         try {
             int cantidad = Integer.parseInt(txtCantidad.getText().trim());
-            Cliente titular = null;
-            if (chkEsFason.isSelected()) {
-                String clienteId = txtClienteId.getText().trim();
-                if (clienteId.isEmpty()) {
-                    throw new ReglaNegocioException("Debe ingresar el ID del cliente fasón.");
-                }
-                titular = new Cliente();
-                titular.setId(clienteId);
-            }
-
+            Cliente titular = valorSeleccionado(cmbCliente, "Seleccioná el repartidor titular.");
             String op = cmbOperacion.getValue();
             if (OP_PRODUCCION.equals(op)) {
-                String presId = txtPresentacionId.getText().trim();
-                if (presId.isEmpty()) {
-                    throw new ReglaNegocioException("Debe ingresar el ID de la presentación.");
-                }
-                Presentacion presentacion = new Presentacion();
-                presentacion.setId(presId);
-
+                Presentacion presentacion = valorSeleccionado(cmbPresentacion, "Seleccioná una presentación.");
                 servicioInventario.registrarProduccion(titular, presentacion, cantidad);
                 mostrarExito(lblEstado, "Producción de " + cantidad + " unidades registrada.");
             } else {
-                String envaseId = txtEnvaseId.getText().trim();
-                if (envaseId.isEmpty()) {
-                    throw new ReglaNegocioException("Debe ingresar el ID del envase.");
-                }
-                Envase envase = new Envase();
-                envase.setId(envaseId);
-
+                Envase envase = valorSeleccionado(cmbEnvase, "Seleccioná un tipo de envase.");
                 if (OP_RECEPCION.equals(op)) {
                     servicioInventario.registrarRecepcionVacios(titular, envase, cantidad);
-                    mostrarExito(lblEstado, "Recepción de " + cantidad + " envases vacíos registrada.");
+                    mostrarExito(lblEstado, "Recepción de " + cantidad + " envases registrada.");
                 } else if (OP_DEVOLUCION.equals(op)) {
                     servicioInventario.registrarDevolucionEnvases(titular, envase, cantidad);
                     mostrarExito(lblEstado, "Devolución de " + cantidad + " envases registrada.");
                 } else if (OP_LAVADO.equals(op)) {
                     servicioInventario.registrarLavado(titular, envase, cantidad);
-                    mostrarExito(lblEstado, "Lavado de " + cantidad + " envases registrado (pasaron a APTOS).");
+                    mostrarExito(lblEstado, "Lavado de " + cantidad + " envases registrado.");
+                } else {
+                    throw new ReglaNegocioException("Seleccioná una operación.");
                 }
             }
 
@@ -266,21 +258,14 @@ public class InventarioController {
             return;
         }
         try {
-            String tipoCajonId = txtCajonTipoId.getText().trim();
+            TipoCajon tipo = valorSeleccionado(cmbCajonTipo, "Seleccioná un tipo de cajón.");
+            Cliente cliente = valorSeleccionado(cmbCajonCliente, "Seleccioná el repartidor titular.");
             int cantidad = Integer.parseInt(txtCajonCantidad.getText().trim());
             boolean esRetorno = CAJON_INGRESO_DEVOLUCION.equals(cmbOpCajon.getValue());
-
-            String clienteId = txtCajonClienteId.getText().trim();
-            Cliente cliente = null;
-            if (!clienteId.isEmpty()) {
-                cliente = new Cliente();
-                cliente.setId(clienteId);
-            }
-
-            servicioInventario.registrarMovimientoCajon(cliente, tipoCajonId, cantidad, esRetorno);
+            servicioInventario.registrarMovimientoCajon(cliente, tipo.getId(), cantidad, esRetorno);
             mostrarExito(lblEstadoCajon, "Movimiento de " + cantidad + " cajones registrado.");
-            txtCajonTipoId.clear();
-            txtCajonClienteId.clear();
+            cmbCajonTipo.getSelectionModel().clearSelection();
+            cmbCajonCliente.getSelectionModel().clearSelection();
             txtCajonCantidad.clear();
             cargarDatosTablas();
         } catch (NumberFormatException e) {
@@ -306,12 +291,10 @@ public class InventarioController {
 
     @FXML
     private void onLimpiarFormulario() {
-        txtEnvaseId.clear();
-        txtPresentacionId.clear();
+        cmbEnvase.getSelectionModel().clearSelection();
+        cmbPresentacion.getSelectionModel().clearSelection();
+        cmbCliente.getSelectionModel().clearSelection();
         txtCantidad.clear();
-        chkEsFason.setSelected(true);
-        txtClienteId.clear();
-        txtClienteId.setDisable(false);
         actualizarCamposSegunOperacion();
     }
 

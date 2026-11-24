@@ -6,6 +6,7 @@ import ar.edu.utn.tpfinalsoderia.models.*;
 
 import java.sql.*;
 import java.util.List;
+import java.util.UUID;
 
 
 /// +-------------------------------------------------------------------+
@@ -40,10 +41,10 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
 
     private static final String SQL_INSERTAR_PEDIDO =
-            "INSERT INTO pedidos (cliente_id, fecha, estado) VALUES (?, ?, ?)";
+            "INSERT INTO pedidos (id, cliente_id, fecha, estado) VALUES (?, ?, ?, ?)";
     private static final String SQL_INSERTAR_DETALLE =
-            "INSERT INTO detalle_pedido (pedido_id, presentacion_id, cantidad_unidades, precio_unitario_pactado, cantidad_cajones, tipo_cajon_id) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)";
+            "INSERT INTO detalle_pedido (id, pedido_id, presentacion_id, cantidad_unidades, precio_unitario_pactado, cantidad_cajones, tipo_cajon_id) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_ACTUALIZAR_PEDIDO =
             "UPDATE pedidos SET cliente_id = ?, fecha = ?, estado = ? WHERE id = ?";
     private static final String SQL_ELIMINAR_DETALLES =
@@ -51,7 +52,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
     private static final String SQL_BUSCAR_POR_ID =
             "SELECT id, cliente_id, fecha, estado FROM pedidos WHERE id = ?";
     private static final String SQL_BUSCAR_DETALLES =
-            "SELECT presentacion_id, cantidad_unidades, precio_unitario_pactado, cantidad_cajones, tipo_cajon_id " +
+            "SELECT id, presentacion_id, cantidad_unidades, precio_unitario_pactado, cantidad_cajones, tipo_cajon_id " +
                     "FROM detalle_pedido WHERE pedido_id = ?";
     private static final String SQL_LISTAR =
             "SELECT id, cliente_id, fecha, estado FROM pedidos";
@@ -105,6 +106,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
     private DetallePedido mapearDetalle(ResultSet rs) throws SQLException {
         DetallePedido detalle = new DetallePedido();
+        detalle.setId(rs.getString("id"));
         detalle.setCantidadUnidades(rs.getInt("cantidad_unidades"));
         detalle.setPrecioUnitario(rs.getBigDecimal("precio_unitario_pactado"));
         detalle.setCantidadCajones(rs.getInt("cantidad_cajones"));
@@ -124,25 +126,15 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
     }
 
     @Override
-    public void guardar(Pedido pedido) throws PersistenciaException{
-        try{
-            conexion.setAutoCommit(false);//desactiva el autoguardado
-            String idPedido=  InsertarPedido(pedido);
-            pedido.setId(idPedido);
+    public void guardar(Pedido pedido) throws PersistenciaException {
+        try (TransaccionJdbc tx = new TransaccionJdbc(conexion)) {
+            InsertarPedido(pedido);
             insertarDetalles(pedido);
-
-            conexion.commit();
-
-        }catch(SQLException |PersistenciaException e){
-            revertirTransaccion();//rollback si hay error
-            throw new PersistenciaException("Error al guardar el pedido id: " + pedido.getId(),e);
-
-        }finally {
-            restaurarAutocommit();
+            tx.confirmar();
+        } catch (SQLException | RuntimeException e) {
+            throw new PersistenciaException("Error al guardar el pedido.", e);
         }
-
     }
-
 
     @Override
     public Pedido buscarPorId(String id) throws PersistenciaException {
@@ -179,17 +171,22 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
     @Override
     public void actualizar(Pedido pedido) throws PersistenciaException {
-        try {
-            conexion.setAutoCommit(false);
+        try (TransaccionJdbc tx = new TransaccionJdbc(conexion)) {
+            try (PreparedStatement ps = conexion.prepareStatement(
+                    "SELECT estado FROM pedidos WHERE id = ? FOR UPDATE")) {
+                ps.setString(1, pedido.getId());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) throw new PersistenciaException("El pedido no existe.");
+                    if (!EstadoPedido.BORRADOR.name().equals(rs.getString(1)))
+                        throw new PersistenciaException("Solo se pueden editar pedidos en borrador.");
+                }
+            }
             actualizarPedido(pedido);
             eliminarDetallesPorPedido(pedido.getId());
             insertarDetalles(pedido);
-            conexion.commit();
-        } catch (SQLException | PersistenciaException e) {
-            revertirTransaccion();
-            throw new PersistenciaException("Error al actualizar el pedido id: " + pedido.getId(), e);
-        } finally {
-            restaurarAutocommit();
+            tx.confirmar();
+        } catch (SQLException | RuntimeException e) {
+            throw new PersistenciaException("Error al actualizar el pedido.", e);
         }
     }
 
@@ -205,21 +202,19 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
     }
     /// insertar,actualizar,eliminar,cargarDetallesDePedido
 
-    private String InsertarPedido(Pedido pedido) throws PersistenciaException{
-        try(PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_PEDIDO, Statement.RETURN_GENERATED_KEYS)) { //retorna el id del pedido generado
-
-            ps.setString(1,pedido.getCliente().getId());
-            ps.setTimestamp(2,Timestamp.valueOf(pedido.getFecha()));
-            ps.setString (3 , pedido.getEstado().name());
+    private String InsertarPedido(Pedido pedido) throws PersistenciaException {
+        if (pedido.getId() == null || pedido.getId().isBlank()) {
+            pedido.setId(UUID.randomUUID().toString());
+        }
+        try (PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_PEDIDO)) {
+            ps.setString(1, pedido.getId());
+            ps.setString(2, pedido.getCliente().getId());
+            ps.setTimestamp(3, Timestamp.valueOf(pedido.getFecha()));
+            ps.setString(4, pedido.getEstado().name());
             ps.executeUpdate();
-
-            try(ResultSet keys = ps.getGeneratedKeys()){ /// devuelve el ID generado
-                if(keys.next()){
-                    return String.valueOf(keys.getInt(1));
-                }
-            } throw new PersistenciaException("No se pudo obtener el ID generado para el pedido");
+            return pedido.getId();
         } catch (SQLException e) {
-            throw new PersistenciaException("Error,Al obtener el ID generado para el pedido.",e);
+            throw new PersistenciaException("Error al insertar el pedido.", e);
         }
     }
 
@@ -230,16 +225,20 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
         try (PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_DETALLE)) {
             for (DetallePedido detalle : pedido.getDetalles()) {
-                ps.setString(1, pedido.getId());
-                ps.setString(2, detalle.getPresentacion().getId());
-                ps.setInt(3, detalle.getCantidadUnidades());
-                ps.setBigDecimal(4, detalle.getPrecioUnitario());
-                ps.setInt(5, detalle.getCantidadCajones());
+                if (detalle.getId() == null || detalle.getId().isBlank()) {
+                    detalle.setId(UUID.randomUUID().toString());
+                }
+                ps.setString(1, detalle.getId());
+                ps.setString(2, pedido.getId());
+                ps.setString(3, detalle.getPresentacion().getId());
+                ps.setInt(4, detalle.getCantidadUnidades());
+                ps.setBigDecimal(5, detalle.getPrecioUnitario());
+                ps.setInt(6, detalle.getCantidadCajones());
 
                 if (detalle.getTipoCajon() != null && detalle.getTipoCajon().getId() !=null) {
-                    ps.setString(6, detalle.getTipoCajon().getId());
+                    ps.setString(7, detalle.getTipoCajon().getId());
                 } else {
-                    ps.setNull(6, Types.VARCHAR );
+                    ps.setNull(7, Types.VARCHAR );
                 }
 
                 ps.addBatch();
@@ -292,30 +291,8 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
 
 
-    private void revertirTransaccion() throws PersistenciaException{
-        if (conexion!= null){
-            try{
-                conexion.rollback();//deshace todos los cambios hechos en la DB desde que inicio esta transaccion
-            } catch (SQLException e) {
-                throw new PersistenciaException("Error. al revertir la transaccion ",e);
-            }
-        }
+    @Override
+    public void desactivar(String id) {
+        eliminar(id); // Para esta entidad, eliminar ya realiza la baja lógica.
     }
-
-
-    private  void restaurarAutocommit() throws PersistenciaException{
-        if(conexion != null){
-            try{
-                conexion.setAutoCommit(true);//activa el autoguardado
-            } catch (SQLException e) {
-                throw new PersistenciaException("Error. Al reiniciar el Autocommit",e);
-            }
-        }
-
-    }
-
-
-
-
-
 }

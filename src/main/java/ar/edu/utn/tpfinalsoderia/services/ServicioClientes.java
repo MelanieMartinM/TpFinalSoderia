@@ -8,15 +8,19 @@ import ar.edu.utn.tpfinalsoderia.models.Cliente;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 public class ServicioClientes {
 
     public void guardar(Cliente cliente) {
-        validarCliente(cliente);
+        validarDatos(cliente);
+        if (cliente.getId() == null || cliente.getId().isBlank()) {
+            cliente.setId(UUID.randomUUID().toString());
+        }
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc();
+                    new ClienteRepositoryJdbc(conexion);
 
             repositorio.guardar(cliente);
 
@@ -32,7 +36,7 @@ public class ServicioClientes {
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc();
+                    new ClienteRepositoryJdbc(conexion);
 
             return repositorio.buscarPorId(id.trim());
 
@@ -46,7 +50,7 @@ public class ServicioClientes {
     public List<Cliente> listar() {
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc();
+                    new ClienteRepositoryJdbc(conexion);
 
             return repositorio.listar();
 
@@ -58,11 +62,12 @@ public class ServicioClientes {
     }
 
     public void actualizar(Cliente cliente) {
-        validarCliente(cliente);
+        validarDatos(cliente);
+        validarId(cliente.getId());
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc();
+                    new ClienteRepositoryJdbc(conexion);
 
             repositorio.actualizar(cliente);
 
@@ -78,7 +83,7 @@ public class ServicioClientes {
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc();
+                    new ClienteRepositoryJdbc(conexion);
 
             repositorio.eliminar(id.trim());
 
@@ -89,14 +94,12 @@ public class ServicioClientes {
         }
     }
 
-    private void validarCliente(Cliente cliente) {
+    private void validarDatos(Cliente cliente) {
         if (cliente == null) {
             throw new IllegalArgumentException(
                     "Debés ingresar un cliente."
             );
         }
-
-        validarId(cliente.getId());
 
         if (cliente.getNombre() == null
                 || cliente.getNombre().isBlank()) {

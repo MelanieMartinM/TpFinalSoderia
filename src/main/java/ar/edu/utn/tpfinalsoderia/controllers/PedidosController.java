@@ -21,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.util.StringConverter;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -53,6 +54,24 @@ public class PedidosController {
 
     @FXML
     public void initialize() {
+        cmbCliente.setConverter(new StringConverter<>() {
+            @Override public String toString(Cliente c) {
+                if (c == null) return "";
+                int posicion = cmbCliente.getItems().indexOf(c) + 1;
+                String contacto = c.getTelefono() == null || c.getTelefono().isBlank() ? c.getDireccion() : c.getTelefono();
+                return (posicion > 0 ? posicion + ". " : "") + c.getNombre()
+                        + (contacto == null || contacto.isBlank() ? "" : " — " + contacto);
+            }
+            @Override public Cliente fromString(String texto) { return null; }
+        });
+        cmbPresentacion.setConverter(new StringConverter<>() {
+            @Override public String toString(Presentacion p) { return p == null ? "" : p.getNombre(); }
+            @Override public Presentacion fromString(String texto) { return null; }
+        });
+        cmbTipoCajon.setConverter(new StringConverter<>() {
+            @Override public String toString(TipoCajon c) { return c == null ? "" : c.getDescripcion() + " — capacidad " + c.getCapacidad(); }
+            @Override public TipoCajon fromString(String texto) { return null; }
+        });
         configurarColumnas();
         tblDetalles.setItems(detalles);
         inicializarServicio();
@@ -66,8 +85,34 @@ public class PedidosController {
             CatalogoRepositoryJdbc catalogoRepo = new CatalogoRepositoryJdbc();
             this.servicioPedidos = new ServicioPedidos(pedidoRepo, catalogoRepo);
             cargarPresentaciones();
-        } catch ( PersistenciaException | IllegalStateException e) {
+            cargarRepartidoresYTipos();
+        } catch ( PersistenciaException | IllegalStateException | SQLException e) {
             mostrarError("Sin conexión a BD: " + e.getMessage());
+        }
+    }
+
+    private void cargarRepartidoresYTipos() throws SQLException {
+        try (Connection conexion = ConexionFactory.abrirConexion();
+             java.sql.PreparedStatement clientes = conexion.prepareStatement(
+                     "SELECT id, nombre, telefono, direccion FROM clientes WHERE activo=TRUE ORDER BY nombre,id");
+             java.sql.ResultSet rsClientes = clientes.executeQuery()) {
+            while (rsClientes.next()) {
+                Cliente c = new Cliente();
+                c.setId(rsClientes.getString("id"));
+                c.setNombre(rsClientes.getString("nombre"));
+                c.setTelefono(rsClientes.getString("telefono"));
+                c.setDireccion(rsClientes.getString("direccion"));
+                cmbCliente.getItems().add(c);
+            }
+            try (java.sql.PreparedStatement tipos = conexion.prepareStatement(
+                    "SELECT id, codigo, descripcion, capacidad FROM tipos_cajon ORDER BY descripcion");
+                 java.sql.ResultSet rsTipos = tipos.executeQuery()) {
+                while (rsTipos.next()) {
+                    cmbTipoCajon.getItems().add(new TipoCajon(rsTipos.getString("id"),
+                            rsTipos.getString("codigo"), rsTipos.getString("descripcion"),
+                            rsTipos.getInt("capacidad")));
+                }
+            }
         }
     }
 
@@ -125,6 +170,7 @@ public class PedidosController {
 
             if (pedidoActual == null) {
                 pedidoActual = servicioPedidos.crearPedido(cliente);
+                cmbCliente.setDisable(true);
             }
 
             servicioPedidos.agregarItem(
@@ -159,8 +205,9 @@ public class PedidosController {
         }
         try {
             servicioPedidos.confirmarPedido(pedidoActual);
-            mostrarExito("Pedido confirmado correctamente (ID: " + pedidoActual.getId() + ").");
+            mostrarExito("Pedido confirmado correctamente.");
             pedidoActual = null;
+            cmbCliente.setDisable(false);
             detalles.clear();
             actualizarTotal();
         } catch (ReglaNegocioException | PersistenciaException e) {

@@ -16,7 +16,7 @@ public class Usuario {
             String hashContrasena,
             RolUsuario rol
     ) {
-        this.id = id;
+        this.id = (id == null || id.isBlank()) ? java.util.UUID.randomUUID().toString() : id;
         this.nombreUsuario = nombreUsuario;
         this.hashContrasena = hashContrasena;
         this.rol = rol;

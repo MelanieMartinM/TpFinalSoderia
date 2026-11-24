@@ -14,9 +14,6 @@ import javafx.scene.control.TextField;
 public class ClientesController {
 
     @FXML
-    private TextField campoId;
-
-    @FXML
     private TextField campoNombre;
 
     @FXML
@@ -32,9 +29,6 @@ public class ClientesController {
     private TableView<Cliente> tablaClientes;
 
     @FXML
-    private TableColumn<Cliente, String> columnaId;
-
-    @FXML
     private TableColumn<Cliente, String> columnaNombre;
 
     @FXML
@@ -47,10 +41,6 @@ public class ClientesController {
 
     @FXML
     public void initialize() {
-        columnaId.setCellValueFactory(
-                fila -> new SimpleStringProperty(fila.getValue().getId())
-        );
-
         columnaNombre.setCellValueFactory(
                 fila -> new SimpleStringProperty(fila.getValue().getNombre())
         );
@@ -75,13 +65,10 @@ public class ClientesController {
     }
 
     private void mostrarEnCampos(Cliente cliente) {
-        campoId.setText(cliente.getId());
         campoNombre.setText(cliente.getNombre());
         campoTelefono.setText(cliente.getTelefono());
         campoDireccion.setText(cliente.getDireccion());
 
-        // El ID no se modifica mientras se edita un cliente.
-        campoId.setEditable(false);
     }
 
     private void cargarClientes() {
@@ -125,7 +112,8 @@ public class ClientesController {
 
         try {
             Cliente cliente = crearClienteDesdeCampos();
-
+            cliente.setId(seleccionado.getId());
+            cliente.setActivo(seleccionado.isActivo());
             servicio.actualizar(cliente);
             cargarClientes();
             limpiarCampos();
@@ -171,18 +159,15 @@ public class ClientesController {
     private void limpiarCampos() {
         tablaClientes.getSelectionModel().clearSelection();
 
-        campoId.clear();
         campoNombre.clear();
         campoTelefono.clear();
         campoDireccion.clear();
 
-        campoId.setEditable(true);
     }
 
     private Cliente crearClienteDesdeCampos() {
         Cliente cliente = new Cliente();
 
-        cliente.setId(campoId.getText().trim());
         cliente.setNombre(campoNombre.getText().trim());
         cliente.setTelefono(campoTelefono.getText().trim());
         cliente.setDireccion(campoDireccion.getText().trim());
