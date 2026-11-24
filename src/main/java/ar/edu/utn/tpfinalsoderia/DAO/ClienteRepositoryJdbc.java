@@ -12,9 +12,21 @@ import java.util.List;
 
 public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
 
-    public ClienteRepositoryJdbc(Connection conexion) {
-        super(conexion);
+    public ClienteRepositoryJdbc() {
+        super(null);
+        conectar();
+
     }
+
+        private void conectar() throws PersistenciaException {
+            try {
+                this.conexion = ConexionFactory.abrirConexion();
+            } catch (SQLException e) {
+                throw new PersistenciaException("No se pudo conectar a la base de datos", e);
+            }
+        }
+
+
 
     @Override
     protected Cliente mapear(ResultSet resultado) throws SQLException {

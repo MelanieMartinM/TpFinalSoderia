@@ -101,7 +101,7 @@ public class InventarioController {
     private void inicializarServicio() {
         try {
             Connection conexion = ConexionFactory.abrirConexion();
-            InventarioRepositoryJdbc inventarioRepo = new InventarioRepositoryJdbc(conexion);
+            InventarioRepositoryJdbc inventarioRepo = new InventarioRepositoryJdbc();
             this.servicioInventario = new ServicioInventario(conexion, inventarioRepo);
             cargarDatosTablas();
         } catch (SQLException | IllegalStateException e) {

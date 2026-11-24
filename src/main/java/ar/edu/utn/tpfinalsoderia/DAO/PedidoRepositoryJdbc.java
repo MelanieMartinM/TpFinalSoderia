@@ -62,7 +62,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
 
 
-    public PedidoRepositoryJdbc(Connection conexion) throws PersistenciaException{
+    public PedidoRepositoryJdbc() throws PersistenciaException{
         super(null);
         conectar();
     }

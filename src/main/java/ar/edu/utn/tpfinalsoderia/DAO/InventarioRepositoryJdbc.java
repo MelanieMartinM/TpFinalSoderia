@@ -24,10 +24,19 @@ import java.util.Objects;
 
 public class InventarioRepositoryJdbc {
 
-    private final Connection conexion;
+    private  Connection conexion;
 
-    public InventarioRepositoryJdbc(Connection conexion) {
-        this.conexion = Objects.requireNonNull(conexion, "La conexión no puede ser nula.");
+    public InventarioRepositoryJdbc() {
+        conectar();
+    }
+
+
+    private void conectar() throws PersistenciaException {
+        try {
+            this.conexion = ConexionFactory.abrirConexion();
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo conectar a la base de datos", e);
+        }
     }
 
     public StockProducto buscarStockProducto(Cliente titular, Presentacion presentacion) {

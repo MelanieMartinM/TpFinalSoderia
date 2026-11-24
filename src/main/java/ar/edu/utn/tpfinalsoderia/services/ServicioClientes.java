@@ -16,7 +16,7 @@ public class ServicioClientes {
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc(conexion);
+                    new ClienteRepositoryJdbc();
 
             repositorio.guardar(cliente);
 
@@ -32,7 +32,7 @@ public class ServicioClientes {
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc(conexion);
+                    new ClienteRepositoryJdbc();
 
             return repositorio.buscarPorId(id.trim());
 
@@ -46,7 +46,7 @@ public class ServicioClientes {
     public List<Cliente> listar() {
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc(conexion);
+                    new ClienteRepositoryJdbc();
 
             return repositorio.listar();
 
@@ -62,7 +62,7 @@ public class ServicioClientes {
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc(conexion);
+                    new ClienteRepositoryJdbc();
 
             repositorio.actualizar(cliente);
 
@@ -78,7 +78,7 @@ public class ServicioClientes {
 
         try (Connection conexion = ConexionFactory.abrirConexion()) {
             ClienteRepositoryJdbc repositorio =
-                    new ClienteRepositoryJdbc(conexion);
+                    new ClienteRepositoryJdbc();
 
             repositorio.eliminar(id.trim());
 
