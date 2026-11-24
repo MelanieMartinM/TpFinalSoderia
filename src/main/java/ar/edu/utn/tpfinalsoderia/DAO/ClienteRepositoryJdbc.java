@@ -27,7 +27,6 @@ public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
     }
 
 
-
     @Override
     protected Cliente mapear(ResultSet resultado) throws SQLException {
         Cliente cliente = new Cliente();

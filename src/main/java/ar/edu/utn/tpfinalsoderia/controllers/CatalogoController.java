@@ -45,13 +45,13 @@ import java.util.Locale;
 
         private void inicializarServicio() {
             try {
-                Connection conexion = ConexionFactory.abrirConexion();
+
                 ProductoRepositoryJdbc productoRepo = new ProductoRepositoryJdbc();
                 MarcaRepositoryJdbc marcaRepo = new MarcaRepositoryJdbc();
                 CatalogoRepositoryJdbc catalogoRepo = new CatalogoRepositoryJdbc();
                 this.servicioCatalogo = new ServicioCatalogo(productoRepo, marcaRepo, catalogoRepo);
                 cargarCatalogo();
-            } catch (SQLException | PersistenciaException | IllegalStateException e) {
+            } catch ( PersistenciaException | IllegalStateException e) {
                 mostrarError("Sin conexión a BD: " + e.getMessage());
             }
         }

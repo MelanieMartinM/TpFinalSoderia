@@ -61,12 +61,12 @@ public class PedidosController {
 
     private void inicializarServicio() {
         try {
-            Connection conexion = ConexionFactory.abrirConexion();
-            PedidoRepositoryJdbc pedidoRepo = new PedidoRepositoryJdbc(conexion);
+
+            PedidoRepositoryJdbc pedidoRepo = new PedidoRepositoryJdbc();
             CatalogoRepositoryJdbc catalogoRepo = new CatalogoRepositoryJdbc();
             this.servicioPedidos = new ServicioPedidos(pedidoRepo, catalogoRepo);
             cargarPresentaciones();
-        } catch (SQLException | PersistenciaException | IllegalStateException e) {
+        } catch ( PersistenciaException | IllegalStateException e) {
             mostrarError("Sin conexión a BD: " + e.getMessage());
         }
     }
