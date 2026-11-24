@@ -110,7 +110,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
         detalle.setCantidadCajones(rs.getInt("cantidad_cajones"));
 
         Presentacion presentacion = new Presentacion();
-        presentacion.setId(rs.getInt("presentacion_id"));
+        presentacion.setId(rs.getString("presentacion_id"));
         detalle.setPresentacion(presentacion);
 
         String tipoCajonId = rs.getString("tipo_cajon_id");
@@ -235,7 +235,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
         try (PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_DETALLE)) {
             for (DetallePedido detalle : pedido.getDetalles()) {
                 ps.setString(1, pedido.getId());
-                ps.setInt(2, detalle.getPresentacion().getId());
+                ps.setString(2, detalle.getPresentacion().getId());
                 ps.setInt(3, detalle.getCantidadUnidades());
                 ps.setBigDecimal(4, detalle.getPrecioUnitario());
                 ps.setInt(5, detalle.getCantidadCajones());

@@ -1,9 +1,8 @@
 package ar.edu.utn.tpfinalsoderia.controllers;
 
-import ar.edu.utn.tpfinalsoderia.DAO.CajonDAO;
 import ar.edu.utn.tpfinalsoderia.DAO.ConexionFactory;
+import ar.edu.utn.tpfinalsoderia.DAO.InventarioRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.DAO.RetiroCobroRepositoryJdbc;
-import ar.edu.utn.tpfinalsoderia.DAO.StockEnvaseDAO;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.models.Cobro;
 import ar.edu.utn.tpfinalsoderia.models.StockEnvase;
@@ -55,11 +54,12 @@ public class ReportesController {
     private void inicializarServicio() {
         try {
             Connection conexion = ConexionFactory.abrirConexion();
+            InventarioRepositoryJdbc inventarioRepo = new InventarioRepositoryJdbc(conexion);
+            RetiroCobroRepositoryJdbc retiroCobroRepo = new RetiroCobroRepositoryJdbc(conexion);
             this.servicioReportes = new ServicioReportes(
                     conexion,
-                    new StockEnvaseDAO(conexion),
-                    new CajonDAO(conexion),
-                    new RetiroCobroRepositoryJdbc(conexion)
+                    inventarioRepo,
+                    retiroCobroRepo
             );
             onRefrescarReportes();
         } catch (SQLException | IllegalStateException e) {

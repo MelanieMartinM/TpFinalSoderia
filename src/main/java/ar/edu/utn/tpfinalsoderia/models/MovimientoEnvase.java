@@ -3,6 +3,7 @@ package ar.edu.utn.tpfinalsoderia.models;
 import ar.edu.utn.tpfinalsoderia.enums.TipoMovimientoEnvase;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class MovimientoEnvase {
     private String id;
@@ -35,4 +36,16 @@ public class MovimientoEnvase {
     public void setCantidad(int cantidad) { this.cantidad = cantidad; }
     public LocalDateTime getFecha() { return fecha; }
     public void setFecha(LocalDateTime fecha) { this.fecha = fecha; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MovimientoEnvase other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

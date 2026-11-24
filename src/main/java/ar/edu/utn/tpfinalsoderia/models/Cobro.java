@@ -2,6 +2,7 @@ package ar.edu.utn.tpfinalsoderia.models;
 
 import ar.edu.utn.tpfinalsoderia.enums.MedioDePago;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class Cobro
 {
@@ -43,5 +44,17 @@ public class Cobro
     public void setResponsableAutorizacion(String responsableAutorizacion) { this.responsableAutorizacion = responsableAutorizacion; }
     public String getMotivoAutorizacion() { return motivoAutorizacion; }
     public void setMotivoAutorizacion(String motivoAutorizacion) { this.motivoAutorizacion = motivoAutorizacion; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Cobro other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
 }

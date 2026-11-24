@@ -2,6 +2,8 @@ package ar.edu.utn.tpfinalsoderia.models;
 
 import ar.edu.utn.tpfinalsoderia.interfaces.Retornable;
 
+import java.util.Objects;
+
 public class TipoCajon implements Retornable
 {
     private String id;
@@ -30,4 +32,16 @@ public class TipoCajon implements Retornable
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
     public int getCapacidad() { return capacidad; }
     public void setCapacidad(int capacidad) { this.capacidad = capacidad; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TipoCajon other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

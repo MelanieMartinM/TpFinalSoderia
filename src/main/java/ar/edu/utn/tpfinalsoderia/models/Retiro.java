@@ -4,6 +4,7 @@ import ar.edu.utn.tpfinalsoderia.interfaces.Facturable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Retiro implements Facturable
 {
@@ -61,4 +62,15 @@ public class Retiro implements Facturable
     public Cobro getCobro() { return cobro; }
     public void setCobro(Cobro cobro) { this.cobro = cobro; }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Retiro other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

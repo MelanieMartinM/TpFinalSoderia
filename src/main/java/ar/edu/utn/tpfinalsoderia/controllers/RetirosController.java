@@ -1,11 +1,18 @@
 package ar.edu.utn.tpfinalsoderia.controllers;
 
-import ar.edu.utn.tpfinalsoderia.DAO.*;
+import ar.edu.utn.tpfinalsoderia.DAO.ConexionFactory;
+import ar.edu.utn.tpfinalsoderia.DAO.InventarioRepositoryJdbc;
+import ar.edu.utn.tpfinalsoderia.DAO.RetiroCobroRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.enums.MedioDePago;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.exceptions.ReglaNegocioException;
 import ar.edu.utn.tpfinalsoderia.exceptions.StockInsuficienteException;
-import ar.edu.utn.tpfinalsoderia.models.*;
+import ar.edu.utn.tpfinalsoderia.models.Cliente;
+import ar.edu.utn.tpfinalsoderia.models.Cobro;
+import ar.edu.utn.tpfinalsoderia.models.DetalleRetiro;
+import ar.edu.utn.tpfinalsoderia.models.Presentacion;
+import ar.edu.utn.tpfinalsoderia.models.Retiro;
+import ar.edu.utn.tpfinalsoderia.models.TipoCajon;
 import ar.edu.utn.tpfinalsoderia.services.ServicioRetirosCobros;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -13,7 +20,12 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,8 +33,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
-public class RetirosController
-{
+public class RetirosController {
+
     @FXML private CheckBox chkEsFason;
     @FXML private TextField txtClienteId;
     @FXML private TextField txtPedidoId;
@@ -60,8 +72,7 @@ public class RetirosController
     private ServicioRetirosCobros servicioRetirosCobros;
 
     @FXML
-    public void initialize()
-    {
+    public void initialize() {
         cmbMedioPago.setItems(FXCollections.observableArrayList(MedioDePago.values()));
         cmbMedioPago.getSelectionModel().selectFirst();
         tblDetalles.setItems(detallesCargados);
@@ -69,17 +80,15 @@ public class RetirosController
         inicializarServicio();
     }
 
-    private void inicializarServicio()
-    {
-        try
-        {
+    private void inicializarServicio() {
+        try {
             Connection conexion = ConexionFactory.abrirConexion();
+            RetiroCobroRepositoryJdbc retiroCobroRepo = new RetiroCobroRepositoryJdbc(conexion);
+            InventarioRepositoryJdbc inventarioRepo = new InventarioRepositoryJdbc(conexion);
             this.servicioRetirosCobros = new ServicioRetirosCobros(
                     conexion,
-                    new RetiroCobroRepositoryJdbc(conexion),
-                    new StockProductoDAO(conexion),
-                    new StockEnvaseDAO(conexion),
-                    new CajonDAO(conexion)
+                    retiroCobroRepo,
+                    inventarioRepo
             );
             cargarCobros();
         } catch (SQLException | IllegalStateException e) {
@@ -205,7 +214,8 @@ public class RetirosController
                 if (cliId.isEmpty()) {
                     throw new ReglaNegocioException("Debe ingresar el ID del cliente fasón.");
                 }
-                cliente = new Cliente("", cliId, "", "", true);
+                cliente = new Cliente();
+                cliente.setId(cliId);
             }
 
             Retiro retiro = new Retiro(

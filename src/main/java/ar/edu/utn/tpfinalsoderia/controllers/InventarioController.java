@@ -1,23 +1,35 @@
 package ar.edu.utn.tpfinalsoderia.controllers;
 
 import ar.edu.utn.tpfinalsoderia.DAO.ConexionFactory;
+import ar.edu.utn.tpfinalsoderia.DAO.InventarioRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.exceptions.ReglaNegocioException;
 import ar.edu.utn.tpfinalsoderia.exceptions.StockInsuficienteException;
-import ar.edu.utn.tpfinalsoderia.models.*;
-import ar.edu.utn.tpfinalsoderia.services.InventarioService;
+import ar.edu.utn.tpfinalsoderia.models.Cliente;
+import ar.edu.utn.tpfinalsoderia.models.Envase;
+import ar.edu.utn.tpfinalsoderia.models.MovimientoCajon;
+import ar.edu.utn.tpfinalsoderia.models.MovimientoEnvase;
+import ar.edu.utn.tpfinalsoderia.models.Presentacion;
+import ar.edu.utn.tpfinalsoderia.models.StockCajon;
+import ar.edu.utn.tpfinalsoderia.models.StockEnvase;
+import ar.edu.utn.tpfinalsoderia.models.StockProducto;
+import ar.edu.utn.tpfinalsoderia.services.ServicioInventario;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 
-public class InventarioController
-{
+public class InventarioController {
 
     private static final String OP_RECEPCION = "1. Recepción de Envases Vacíos (Sucios)";
     private static final String OP_DEVOLUCION = "2. Devolución de Envases Vacíos (Retorno)";
@@ -71,7 +83,7 @@ public class InventarioController
     @FXML private TableColumn<MovimientoCajon, String> colMovCajonTipo;
     @FXML private TableColumn<MovimientoCajon, Number> colMovCajonCant;
 
-    private InventarioService inventarioService;
+    private ServicioInventario servicioInventario;
 
     @FXML
     public void initialize() {
@@ -89,11 +101,8 @@ public class InventarioController
     private void inicializarServicio() {
         try {
             Connection conexion = ConexionFactory.abrirConexion();
-            this.inventarioService = new InventarioService(
-                    conexion,
-                    new StockEnvaseDAO(conexion),
-                    new StockProductoDAO(conexion),
-            );
+            InventarioRepositoryJdbc inventarioRepo = new InventarioRepositoryJdbc(conexion);
+            this.servicioInventario = new ServicioInventario(conexion, inventarioRepo);
             cargarDatosTablas();
         } catch (SQLException | IllegalStateException e) {
             mostrarError(lblEstado, "Sin conexión a BD: " + e.getMessage());
@@ -187,7 +196,7 @@ public class InventarioController
 
     @FXML
     private void onConfirmarOperacion() {
-        if (inventarioService == null) {
+        if (servicioInventario == null) {
             mostrarError(lblEstado, "No hay conexión activa con la base de datos.");
             return;
         }
@@ -200,7 +209,8 @@ public class InventarioController
                 if (clienteId.isEmpty()) {
                     throw new ReglaNegocioException("Debe ingresar el ID del cliente fasón.");
                 }
-                titular = new Cliente("", clienteId, "", "", true);
+                titular = new Cliente();
+                titular.setId(clienteId);
             }
 
             String op = cmbOperacion.getValue();
@@ -212,7 +222,7 @@ public class InventarioController
                 Presentacion presentacion = new Presentacion();
                 presentacion.setId(presId);
 
-                inventarioService.registrarProduccion(titular, presentacion, cantidad);
+                servicioInventario.registrarProduccion(titular, presentacion, cantidad);
                 mostrarExito(lblEstado, "Producción de " + cantidad + " unidades registrada.");
             } else {
                 String envaseId = txtEnvaseId.getText().trim();
@@ -223,13 +233,13 @@ public class InventarioController
                 envase.setId(envaseId);
 
                 if (OP_RECEPCION.equals(op)) {
-                    inventarioService.registrarRecepcionVacios(titular, envase, cantidad);
+                    servicioInventario.registrarRecepcionVacios(titular, envase, cantidad);
                     mostrarExito(lblEstado, "Recepción de " + cantidad + " envases vacíos registrada.");
                 } else if (OP_DEVOLUCION.equals(op)) {
-                    inventarioService.registrarDevolucionEnvases(titular, envase, cantidad);
+                    servicioInventario.registrarDevolucionEnvases(titular, envase, cantidad);
                     mostrarExito(lblEstado, "Devolución de " + cantidad + " envases registrada.");
                 } else if (OP_LAVADO.equals(op)) {
-                    inventarioService.registrarLavado(titular, envase, cantidad);
+                    servicioInventario.registrarLavado(titular, envase, cantidad);
                     mostrarExito(lblEstado, "Lavado de " + cantidad + " envases registrado (pasaron a APTOS).");
                 }
             }
@@ -246,7 +256,7 @@ public class InventarioController
 
     @FXML
     private void onConfirmarCajon() {
-        if (inventarioService == null) {
+        if (servicioInventario == null) {
             mostrarError(lblEstadoCajon, "No hay conexión activa con la base de datos.");
             return;
         }
@@ -256,9 +266,13 @@ public class InventarioController
             boolean esRetorno = CAJON_INGRESO_DEVOLUCION.equals(cmbOpCajon.getValue());
 
             String clienteId = txtCajonClienteId.getText().trim();
-            Cliente cliente = clienteId.isEmpty() ? null : new Cliente("", clienteId, "", "", true);
+            Cliente cliente = null;
+            if (!clienteId.isEmpty()) {
+                cliente = new Cliente();
+                cliente.setId(clienteId);
+            }
 
-            inventarioService.registrarMovimientoCajon(cliente, tipoCajonId, cantidad, esRetorno);
+            servicioInventario.registrarMovimientoCajon(cliente, tipoCajonId, cantidad, esRetorno);
             mostrarExito(lblEstadoCajon, "Movimiento de " + cantidad + " cajones registrado.");
             txtCajonTipoId.clear();
             txtCajonClienteId.clear();
@@ -273,13 +287,13 @@ public class InventarioController
 
     @FXML
     public void cargarDatosTablas() {
-        if (inventarioService == null) return;
+        if (servicioInventario == null) return;
         try {
-            tblStockEnvases.setItems(FXCollections.observableArrayList(inventarioService.listarStockEnvases()));
-            tblStockProductos.setItems(FXCollections.observableArrayList(inventarioService.listarStockProductos()));
-            tblMovimientos.setItems(FXCollections.observableArrayList(inventarioService.listarMovimientosEnvases()));
-            tblStockCajones.setItems(FXCollections.observableArrayList(inventarioService.listarStockCajones()));
-            tblMovCajones.setItems(FXCollections.observableArrayList(inventarioService.listarMovimientosCajones()));
+            tblStockEnvases.setItems(FXCollections.observableArrayList(servicioInventario.listarStockEnvases()));
+            tblStockProductos.setItems(FXCollections.observableArrayList(servicioInventario.listarStockProductos()));
+            tblMovimientos.setItems(FXCollections.observableArrayList(servicioInventario.listarMovimientosEnvases()));
+            tblStockCajones.setItems(FXCollections.observableArrayList(servicioInventario.listarStockCajones()));
+            tblMovCajones.setItems(FXCollections.observableArrayList(servicioInventario.listarMovimientosCajones()));
         } catch (PersistenciaException e) {
             mostrarError(lblEstado, "Error al refrescar tablas: " + e.getMessage());
         }

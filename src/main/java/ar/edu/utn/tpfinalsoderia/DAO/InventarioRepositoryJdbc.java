@@ -1,5 +1,6 @@
 package ar.edu.utn.tpfinalsoderia.DAO;
 
+import ar.edu.utn.tpfinalsoderia.enums.TipoMovimientoEnvase;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.models.Cliente;
 import ar.edu.utn.tpfinalsoderia.models.Envase;
@@ -16,14 +17,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class InventarioRepositoryJdbc {
 
     private final Connection conexion;
 
-    public InventarioRepositoryJdbc(Connection conexion)
-    {
+    public InventarioRepositoryJdbc(Connection conexion) {
         this.conexion = Objects.requireNonNull(conexion, "La conexión no puede ser nula.");
     }
 
@@ -194,6 +197,206 @@ public class InventarioRepositoryJdbc {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new PersistenciaException("Error al registrar movimiento de cajón.", e);
+        }
+    }
+
+    public List<StockEnvase> listarStockEnvases() {
+        List<StockEnvase> lista = new ArrayList<>();
+        String sql = """
+                SELECT se.id, se.cliente_id, c.nombre AS cliente_nombre,
+                       se.envase_id, e.descripcion AS envase_desc,
+                       se.aptos, se.sucios
+                FROM stock_envase se
+                LEFT JOIN clientes c ON se.cliente_id = c.id
+                LEFT JOIN envases e ON se.envase_id = e.id
+                """;
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Cliente titular = null;
+                String cliId = rs.getString("cliente_id");
+                if (cliId != null && !cliId.isBlank()) {
+                    titular = new Cliente();
+                    titular.setId(cliId);
+                    titular.setNombre(rs.getString("cliente_nombre"));
+                }
+
+                Envase envase = new Envase();
+                envase.setId(rs.getString("envase_id"));
+                envase.setDescripcion(rs.getString("envase_desc"));
+
+                lista.add(new StockEnvase(
+                        rs.getString("id"),
+                        titular,
+                        envase,
+                        rs.getInt("aptos"),
+                        rs.getInt("sucios")
+                ));
+            }
+            return lista;
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al listar stock de envases.", e);
+        }
+    }
+
+    public List<StockProducto> listarStockProductos() {
+        List<StockProducto> lista = new ArrayList<>();
+        String sql = """
+                SELECT sp.id, sp.cliente_id, c.nombre AS cliente_nombre,
+                       sp.presentacion_id, p.nombre AS pres_nombre,
+                       sp.disponibles
+                FROM stock_producto sp
+                LEFT JOIN clientes c ON sp.cliente_id = c.id
+                LEFT JOIN presentaciones p ON sp.presentacion_id = p.id
+                """;
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Cliente titular = null;
+                String cliId = rs.getString("cliente_id");
+                if (cliId != null && !cliId.isBlank()) {
+                    titular = new Cliente();
+                    titular.setId(cliId);
+                    titular.setNombre(rs.getString("cliente_nombre"));
+                }
+
+                Presentacion pres = new Presentacion();
+                pres.setId(rs.getString("presentacion_id"));
+                pres.setNombre(rs.getString("pres_nombre"));
+
+                lista.add(new StockProducto(
+                        rs.getString("id"),
+                        titular,
+                        pres,
+                        rs.getInt("disponibles")
+                ));
+            }
+            return lista;
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al listar stock de productos.", e);
+        }
+    }
+
+    public List<MovimientoEnvase> listarMovimientosEnvases() {
+        List<MovimientoEnvase> lista = new ArrayList<>();
+        String sql = """
+                SELECT me.id, me.cliente_id, c.nombre AS cliente_nombre,
+                       me.envase_id, e.descripcion AS envase_desc,
+                       me.tipo, me.cantidad, me.fecha
+                FROM movimiento_envase me
+                LEFT JOIN clientes c ON me.cliente_id = c.id
+                LEFT JOIN envases e ON me.envase_id = e.id
+                ORDER BY me.fecha DESC
+                """;
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Cliente titular = null;
+                String cliId = rs.getString("cliente_id");
+                if (cliId != null && !cliId.isBlank()) {
+                    titular = new Cliente();
+                    titular.setId(cliId);
+                    titular.setNombre(rs.getString("cliente_nombre"));
+                }
+
+                Envase envase = new Envase();
+                envase.setId(rs.getString("envase_id"));
+                envase.setDescripcion(rs.getString("envase_desc"));
+
+                String tipoStr = rs.getString("tipo");
+                TipoMovimientoEnvase tipo = (tipoStr != null && !tipoStr.isBlank())
+                        ? TipoMovimientoEnvase.valueOf(tipoStr)
+                        : null;
+
+                Timestamp ts = rs.getTimestamp("fecha");
+                LocalDateTime fecha = (ts != null) ? ts.toLocalDateTime() : null;
+
+                lista.add(new MovimientoEnvase(
+                        rs.getString("id"),
+                        titular,
+                        envase,
+                        tipo,
+                        rs.getInt("cantidad"),
+                        fecha
+                ));
+            }
+            return lista;
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al listar movimientos de envases.", e);
+        }
+    }
+
+    public List<StockCajon> listarStockCajones() {
+        List<StockCajon> lista = new ArrayList<>();
+        String sql = """
+                SELECT sc.tipo_cajon_id, tc.descripcion AS cajon_desc, tc.capacidad,
+                       sc.disponibles_fabrica
+                FROM stock_cajon sc
+                LEFT JOIN tipo_cajon tc ON sc.tipo_cajon_id = tc.id
+                """;
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                TipoCajon tipo = new TipoCajon();
+                tipo.setId(rs.getString("tipo_cajon_id"));
+                tipo.setDescripcion(rs.getString("cajon_desc"));
+                tipo.setCapacidad(rs.getInt("capacidad"));
+
+                lista.add(new StockCajon(tipo, rs.getInt("disponibles_fabrica")));
+            }
+            return lista;
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al listar stock de cajones.", e);
+        }
+    }
+
+    public List<MovimientoCajon> listarMovimientosCajones() {
+        List<MovimientoCajon> lista = new ArrayList<>();
+        String sql = """
+                SELECT mc.id, mc.cliente_id, c.nombre AS cliente_nombre,
+                       mc.tipo_cajon_id, tc.descripcion AS cajon_desc, tc.capacidad,
+                       mc.cantidad, mc.fecha, mc.es_retorno
+                FROM movimiento_cajon mc
+                LEFT JOIN clientes c ON mc.cliente_id = c.id
+                LEFT JOIN tipo_cajon tc ON mc.tipo_cajon_id = tc.id
+                ORDER BY mc.fecha DESC
+                """;
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Cliente cliente = null;
+                String cliId = rs.getString("cliente_id");
+                if (cliId != null && !cliId.isBlank()) {
+                    cliente = new Cliente();
+                    cliente.setId(cliId);
+                    cliente.setNombre(rs.getString("cliente_nombre"));
+                }
+
+                TipoCajon tipo = new TipoCajon();
+                tipo.setId(rs.getString("tipo_cajon_id"));
+                tipo.setDescripcion(rs.getString("cajon_desc"));
+                tipo.setCapacidad(rs.getInt("capacidad"));
+
+                Timestamp ts = rs.getTimestamp("fecha");
+                LocalDateTime fecha = (ts != null) ? ts.toLocalDateTime() : null;
+
+                lista.add(new MovimientoCajon(
+                        rs.getString("id"),
+                        cliente,
+                        tipo,
+                        rs.getInt("cantidad"),
+                        fecha,
+                        rs.getBoolean("es_retorno")
+                ));
+            }
+            return lista;
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al listar movimientos de cajones.", e);
         }
     }
 

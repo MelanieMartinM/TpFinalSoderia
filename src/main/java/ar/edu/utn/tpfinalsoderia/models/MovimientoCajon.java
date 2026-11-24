@@ -1,6 +1,7 @@
 package ar.edu.utn.tpfinalsoderia.models;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class MovimientoCajon
 {
@@ -34,4 +35,16 @@ public class MovimientoCajon
     public void setFecha(LocalDateTime fecha) { this.fecha = fecha; }
     public boolean isEsRetorno() { return esRetorno; }
     public void setEsRetorno(boolean esRetorno) { this.esRetorno = esRetorno; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MovimientoCajon other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

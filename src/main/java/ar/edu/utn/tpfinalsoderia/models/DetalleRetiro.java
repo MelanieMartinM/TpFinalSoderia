@@ -1,5 +1,7 @@
 package ar.edu.utn.tpfinalsoderia.models;
 
+import java.util.Objects;
+
 public class DetalleRetiro
 {
     private String id;
@@ -53,4 +55,16 @@ public class DetalleRetiro
     public void setTipoCajon(TipoCajon tipoCajon) { this.tipoCajon = tipoCajon; }
     public int getCantidadCajones() { return cantidadCajones; }
     public void setCantidadCajones(int cantidadCajones) { this.cantidadCajones = cantidadCajones; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DetalleRetiro other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

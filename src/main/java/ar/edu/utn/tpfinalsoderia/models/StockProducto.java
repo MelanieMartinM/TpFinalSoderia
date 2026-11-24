@@ -2,6 +2,8 @@ package ar.edu.utn.tpfinalsoderia.models;
 
 import ar.edu.utn.tpfinalsoderia.exceptions.StockInsuficienteException;
 
+import java.util.Objects;
+
 public class StockProducto {
     private String id;
     private Cliente titular;
@@ -36,4 +38,16 @@ public class StockProducto {
     public void setPresentacion(Presentacion presentacion) { this.presentacion = presentacion; }
     public int getDisponibles() { return disponibles; }
     public void setDisponibles(int disponibles) { this.disponibles = disponibles; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StockProducto other)) return false;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
