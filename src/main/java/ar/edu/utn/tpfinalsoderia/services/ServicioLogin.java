@@ -35,11 +35,13 @@ public class ServicioLogin {
             if (usuario == null || !usuario.isActivo()) {
                 return null;
             }
+// SOLO PARA LA DEMOSTRACIÓN LOCAL.
+// Todavía no verifica el hash guardado en la base.
+            if (nombreUsuario.trim().equals("usuario_prueba")
+                    && contrasena.equals("demo123")) {
+                return usuario;
+            }
 
-            // PENDIENTE:
-            // Verificar la contraseña ingresada contra el hash guardado.
-            //
-            // Hasta implementar esa comprobación, no se permite ingresar.
             return null;
 
         } catch (SQLException e) {
