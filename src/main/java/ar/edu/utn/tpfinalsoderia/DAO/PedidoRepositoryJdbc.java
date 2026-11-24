@@ -81,7 +81,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
     @Override
     protected Pedido mapear(ResultSet resultado) throws SQLException {
         Pedido pedido = new Pedido();
-        pedido.setId(resultado.getInt("id"));
+        pedido.setId(resultado.getString("id"));
 
         String clienteId = resultado.getString("cliente_id");
         if (clienteId != null) {
@@ -127,7 +127,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
     public void guardar(Pedido pedido) throws PersistenciaException{
         try{
             conexion.setAutoCommit(false);//desactiva el autoguardado
-            int idPedido=  InsertarPedido(pedido);
+            String idPedido=  InsertarPedido(pedido);
             pedido.setId(idPedido);
             insertarDetalles(pedido);
 
@@ -199,7 +199,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
     public void eliminar(String id) throws PersistenciaException {
         try (PreparedStatement ps = conexion.prepareStatement(SQL_CANCELAR)) {
             ps.setString(1, EstadoPedido.CANCELADO.name());
-            ps.setInt(2, Integer.parseInt(id));
+            ps.setString(2, id);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new PersistenciaException("Error al cancelar el pedido id: " + id, e);
@@ -209,7 +209,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
     }
     /// insertar,actualizar,eliminar,cargarDetallesDePedido
 
-    private int InsertarPedido(Pedido pedido) throws PersistenciaException{
+    private String InsertarPedido(Pedido pedido) throws PersistenciaException{
         try(PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_PEDIDO, Statement.RETURN_GENERATED_KEYS)) { //retorna el id del pedido generado
 
             ps.setString(1,pedido.getCliente().getId());
@@ -219,7 +219,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
             try(ResultSet keys = ps.getGeneratedKeys()){ /// devuelve el ID generado
                 if(keys.next()){
-                    return keys.getInt(1);
+                    return String.valueOf(keys.getInt(1));
                 }
             } throw new PersistenciaException("No se pudo obtener el ID generado para el pedido");
         } catch (SQLException e) {
@@ -234,7 +234,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
         try (PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR_DETALLE)) {
             for (DetallePedido detalle : pedido.getDetalles()) {
-                ps.setInt(1, pedido.getId());
+                ps.setString(1, pedido.getId());
                 ps.setInt(2, detalle.getPresentacion().getId());
                 ps.setInt(3, detalle.getCantidadUnidades());
                 ps.setBigDecimal(4, detalle.getPrecioUnitario());
@@ -259,14 +259,14 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
             ps.setString(1, pedido.getCliente().getId());
             ps.setTimestamp(2, Timestamp.valueOf(pedido.getFecha()));
             ps.setString(3, pedido.getEstado().name());
-            ps.setInt(4, pedido.getId());
+            ps.setString(4, pedido.getId());
             ps.executeUpdate();
         }
     }
 
-    private void eliminarDetallesPorPedido(int pedidoId) throws SQLException {
+    private void eliminarDetallesPorPedido(String pedidoId) throws SQLException {
         try (PreparedStatement ps = conexion.prepareStatement(SQL_ELIMINAR_DETALLES)) {
-            ps.setInt(1, pedidoId);
+            ps.setString(1, pedidoId);
             ps.executeUpdate();
         }
     }
@@ -274,7 +274,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
 
     private void cargarDetallesDePedido(Pedido pedido) throws PersistenciaException {
         try (PreparedStatement ps = conexion.prepareStatement(SQL_BUSCAR_DETALLES)) {
-            ps.setInt(1, pedido.getId());
+            ps.setString(1, pedido.getId());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     pedido.agregarDetalle(mapearDetalle(rs));
