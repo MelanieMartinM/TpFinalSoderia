@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
-
     public ClienteRepositoryJdbc() {
         super(null);
         conectar();
@@ -25,6 +24,7 @@ public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
             throw new PersistenciaException("No se pudo conectar a la base de datos", e);
         }
     }
+
 
 
 
