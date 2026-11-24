@@ -1,8 +1,6 @@
 package ar.edu.utn.tpfinalsoderia.controllers;
 
 import ar.edu.utn.tpfinalsoderia.DAO.ConexionFactory;
-import ar.edu.utn.tpfinalsoderia.DAO.StockEnvaseDAO;
-import ar.edu.utn.tpfinalsoderia.DAO.StockProductoDAO;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.exceptions.ReglaNegocioException;
 import ar.edu.utn.tpfinalsoderia.exceptions.StockInsuficienteException;
