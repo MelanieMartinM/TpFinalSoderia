@@ -86,7 +86,7 @@ public class Presentacion {
     }
 
 
-    public void desactivar(){
+    public void desactivar() {
 
         setActiva(false);
     }
@@ -104,10 +104,11 @@ public class Presentacion {
                 '}';
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Presentacion that)) return false;
-        return id == that.id;
+        return Objects.equals(id, that.id);
     }
 
     @Override

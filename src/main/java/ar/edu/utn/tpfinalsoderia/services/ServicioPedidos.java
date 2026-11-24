@@ -12,6 +12,7 @@ import ar.edu.utn.tpfinalsoderia.models.Presentacion;
 import ar.edu.utn.tpfinalsoderia.models.TipoCajon;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class ServicioPedidos {
@@ -39,6 +40,7 @@ public class ServicioPedidos {
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
         pedido.setEstado(EstadoPedido.BORRADOR);
+        pedido.setFecha(LocalDateTime.now());
         pedidoRepository.guardar(pedido);
         return pedido;
     }
@@ -51,6 +53,8 @@ public class ServicioPedidos {
                             BigDecimal precioUnitarioPactado) throws PersistenciaException, ReglaNegocioException {
         if (pedido == null) {
             throw new ReglaNegocioException("El pedido no puede ser nulo.");
+        }if (pedido.getId() == null || pedido.getId().isBlank()) {
+            throw new ReglaNegocioException("El ID del pedido es obligatorio para confirmar.");
         }
         if (pedido.getEstado() != EstadoPedido.BORRADOR) {
             throw new ReglaNegocioException("Solo se pueden agregar ítems a pedidos en estado BORRADOR.");
