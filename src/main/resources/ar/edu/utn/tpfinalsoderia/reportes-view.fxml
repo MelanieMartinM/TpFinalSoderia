@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ar.edu.utn.tpfinalsoderia.controllers.ReportesController"
+            prefWidth="980.0" prefHeight="680.0">
+
+    <top>
+        <VBox spacing="4.0" style="-fx-background-color: #1e3a5f; -fx-padding: 14;">
+            <Label text="Reportes y Consultas - Sodería"
+                   style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <Label text="Stock de envases, saldos de cajones por cliente y resumen de cobros"
+                   style="-fx-text-fill: #d0e1f9; -fx-font-size: 12px;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="12.0">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+
+            <HBox spacing="15.0" alignment="CENTER_LEFT">
+                <Button text="Actualizar Reportes" onAction="#onRefrescarReportes"
+                        style="-fx-background-color: #1565c0; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Label fx:id="lblTotalCobrado" text="Total cobrado: $0.0"
+                       style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                <Label fx:id="lblEstado" text=""/>
+            </HBox>
+
+            <Label text="1. Stock de Envases (Aptos / Sucios)" style="-fx-font-weight: bold;"/>
+            <TableView fx:id="tblRepEnvases" prefHeight="150.0">
+                <columns>
+                    <TableColumn fx:id="colRepEnvTitular" text="Titular" prefWidth="200.0"/>
+                    <TableColumn fx:id="colRepEnvDesc" text="Envase" prefWidth="260.0"/>
+                    <TableColumn fx:id="colRepEnvAptos" text="Aptos" prefWidth="140.0"/>
+                    <TableColumn fx:id="colRepEnvSucios" text="Sucios" prefWidth="140.0"/>
+                </columns>
+            </TableView>
+
+            <Label text="2. Cajones por repartidor disponibles en planta" style="-fx-font-weight: bold;"/>
+            <TableView fx:id="tblRepCajones" prefHeight="150.0">
+                <columns>
+                    <TableColumn fx:id="colRepCajCliente" text="Repartidor" prefWidth="220.0"/>
+                    <TableColumn fx:id="colRepCajTipo" text="Tipo de Cajón" prefWidth="240.0"/>
+                    <TableColumn fx:id="colRepCajSaldo" text="Disponibles en planta" prefWidth="160.0"/>
+                </columns>
+            </TableView>
+
+            <Label text="3. Cobros Registrados" style="-fx-font-weight: bold;"/>
+            <TableView fx:id="tblRepCobros" prefHeight="150.0">
+                <columns>
+                    <TableColumn fx:id="colRepCobFecha" text="Fecha" prefWidth="160.0"/>
+                    <TableColumn fx:id="colRepCobMedio" text="Medio de Pago" prefWidth="150.0"/>
+                    <TableColumn fx:id="colRepCobMonto" text="Monto" prefWidth="120.0"/>
+                    <TableColumn fx:id="colRepCobEstado" text="Estado" prefWidth="360.0"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>
