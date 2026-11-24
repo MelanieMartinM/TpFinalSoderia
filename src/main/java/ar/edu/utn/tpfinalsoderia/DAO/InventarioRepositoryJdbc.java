@@ -24,12 +24,17 @@ import java.util.Objects;
 
 public class InventarioRepositoryJdbc {
 
-    private  Connection conexion;
+    private Connection conexion;
 
+    // Constructor vacío: abre su propia conexión (para pantallas que solo leen)
     public InventarioRepositoryJdbc() {
         conectar();
     }
 
+    // Constructor con conexión: para cuando un servicio hace una transacción
+    public InventarioRepositoryJdbc(Connection conexion) {
+        this.conexion = Objects.requireNonNull(conexion, "La conexión no puede ser nula.");
+    }
 
     private void conectar() throws PersistenciaException {
         try {
