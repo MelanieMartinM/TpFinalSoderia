@@ -4,7 +4,6 @@ import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.models.Cliente;
 import ar.edu.utn.tpfinalsoderia.models.Marca;
 
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,7 +46,7 @@ this.conexion=ConexionFactory.abrirConexion();
     @Override
     protected Marca mapear(ResultSet resultado) throws SQLException {
         Marca marca=new Marca();
-        marca.setId(resultado.getInt("id"));
+        marca.setId(resultado.getString("id"));
         marca.setNombre(resultado.getString("nombre"));
         marca.setEsPropiaFabrica(resultado.getBoolean("es_propia_fabrica"));
 
@@ -62,18 +61,28 @@ return marca;
 
     @Override
     public void guardar(Marca marca) throws PersistenciaException {
-        try(PreparedStatement ps= conexion.prepareStatement(SQL_INSERTAR)){
-            ps.setInt(1,marca.getId());
-            ps.setString(2,marca.getNombre());
-            ps.setBoolean(3, marca.isEsPropiaFabrica());
-            ps.setString(4,marca.getTitular().getId());
-            ps.executeUpdate();
-        }catch (SQLException e){
-            throw new PersistenciaException("Error al guardar la marca id: "+ marca.getId(),e);
+        if (marca == null) {
+            throw new IllegalArgumentException("La marca no puede ser nula.");
         }
+        String titularId = (marca.getTitular() != null && marca.getTitular().getId() != null && !marca.getTitular().getId().isBlank())
+                ? marca.getTitular().getId().trim()
+                : null;
 
-
+        try (PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR)) {
+            ps.setString(1, marca.getId());
+            ps.setString(2, marca.getNombre());
+            ps.setBoolean(3, marca.isEsPropiaFabrica());
+            if (titularId != null) {
+                ps.setString(4, titularId);
+            } else {
+                ps.setNull(4, java.sql.Types.VARCHAR);
+            }
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al guardar la marca id: " + marca.getId(), e);
+        }
     }
+
 
     @Override
     public Marca buscarPorId(String id) throws PersistenciaException{
@@ -107,19 +116,27 @@ try(ResultSet rs=ps.executeQuery()){
     }
 
     @Override
-    public void actualizar(Marca marca) throws PersistenciaException{
-        try(PreparedStatement ps=conexion.prepareStatement(SQL_ACTUALIZAR)){
-            ps.setString(1,marca.getTitular().getId());
-            ps.setBoolean(2, marca.isEsPropiaFabrica());
-            ps.setString(3, marca.getNombre());
-            ps.setInt(4,marca.getId());
-            ps.executeUpdate();
-        }catch (SQLException e){
-            throw new PersistenciaException("Error el actualizar la marca id :"+marca.getId(),e);
-
+    public void actualizar(Marca marca) throws PersistenciaException {
+        if (marca == null) {
+            throw new IllegalArgumentException("La marca no puede ser nula.");
         }
+        String titularId = (marca.getTitular() != null && marca.getTitular().getId() != null && !marca.getTitular().getId().isBlank())
+                ? marca.getTitular().getId().trim()
+                : null;
 
-
+        try (PreparedStatement ps = conexion.prepareStatement(SQL_ACTUALIZAR)) {
+            ps.setString(1, marca.getNombre());
+            ps.setBoolean(2, marca.isEsPropiaFabrica());
+            if (titularId != null) {
+                ps.setString(3, titularId);
+            } else {
+                ps.setNull(3, java.sql.Types.VARCHAR);
+            }
+            ps.setString(4, marca.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new PersistenciaException("Error al actualizar la marca id: " + marca.getId(), e);
+        }
     }
 
     @Override

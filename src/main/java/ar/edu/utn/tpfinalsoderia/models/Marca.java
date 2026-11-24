@@ -3,7 +3,7 @@ package ar.edu.utn.tpfinalsoderia.models;
 import java.util.Objects;
 
 public class Marca {
-private int id;
+private String id;
 private String nombre;
 private boolean esPropiaFabrica;
 private Cliente titular;
@@ -12,7 +12,7 @@ private Cliente titular;
     public Marca() {
     }
 
-    public Marca(int id, String nombre, boolean esPropiaFabrica, Cliente titular) {
+    public Marca(String id, String nombre, boolean esPropiaFabrica, Cliente titular) {
         this.id = id;
         this.nombre = nombre;
         this.esPropiaFabrica = esPropiaFabrica;
@@ -20,11 +20,11 @@ private Cliente titular;
     }
 
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -65,7 +65,7 @@ private Cliente titular;
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Marca marca)) return false;
-        return id == marca.id;
+        return Objects.equals(id, marca.id);
     }
 
     @Override

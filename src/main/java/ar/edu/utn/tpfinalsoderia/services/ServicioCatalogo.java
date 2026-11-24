@@ -1,26 +1,32 @@
-package ar.edu.utn.tpfinalsoderia.DAO;
+package ar.edu.utn.tpfinalsoderia.services;
 
+import ar.edu.utn.tpfinalsoderia.DAO.CatalogoRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.DAO.MarcaRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.DAO.ProductoRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.models.Marca;
+import ar.edu.utn.tpfinalsoderia.models.Presentacion;
 import ar.edu.utn.tpfinalsoderia.models.Producto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class ServicioCatalogo {
 
     private final ProductoRepositoryJdbc productoRepositoryJdbc;
     private final MarcaRepositoryJdbc marcaRepositoryJdbc;
-
+    private final CatalogoRepositoryJdbc catalogoRepositoryJdbc;
     public ServicioCatalogo(ProductoRepositoryJdbc productoRepositoryJdbc,
-                            MarcaRepositoryJdbc marcaRepositoryJdbc) {
+                            MarcaRepositoryJdbc marcaRepositoryJdbc,CatalogoRepositoryJdbc catalogoRepositoryJdbc) {
         if (productoRepositoryJdbc == null) {
             throw new IllegalArgumentException("El repositorio de productos no puede ser nulo.");
         }
         if (marcaRepositoryJdbc == null) {
             throw new IllegalArgumentException("El repositorio de marcas no puede ser nulo.");
+        }if (catalogoRepositoryJdbc == null) {
+            throw new IllegalArgumentException("El repositorio de catálogo no puede ser nulo.");
         }
+        this.catalogoRepositoryJdbc= catalogoRepositoryJdbc;
         this.productoRepositoryJdbc = productoRepositoryJdbc;
         this.marcaRepositoryJdbc = marcaRepositoryJdbc;
     }
@@ -72,8 +78,8 @@ public class ServicioCatalogo {
 
     public Marca buscarMarcaPorId(String id) throws PersistenciaException {
         validarIdTexto(id, "marca");
-        validarIdEntero(id.trim(), "marca");
-        return marcaRepositoryJdbc.buscarPorId(id.trim());
+
+        return marcaRepositoryJdbc.buscarPorId(id);
     }
 
     public List<Marca> listarMarcasActivas() throws PersistenciaException {
@@ -82,8 +88,37 @@ public class ServicioCatalogo {
 
     public void desactivarMarca(String id) throws PersistenciaException {
         validarIdTexto(id, "marca");
-        validarIdEntero(id.trim(), "marca");
-        marcaRepositoryJdbc.eliminar(id.trim());
+
+        marcaRepositoryJdbc.eliminar(id);
+    }
+    // --- Presentaciones ---
+
+    public List<Presentacion> listarPresentaciones() throws PersistenciaException {
+        return catalogoRepositoryJdbc.listar();
+    }
+
+    public void actualizarPrecio(Presentacion presentacion, BigDecimal precio) throws PersistenciaException {
+        if (presentacion == null) {
+            throw new IllegalArgumentException("La presentación no puede ser nula.");
+        }
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El precio no puede ser nulo ni negativo.");
+        }
+
+        presentacion.setPrecioLlenado(precio);
+        catalogoRepositoryJdbc.actualizar(presentacion);
+    }
+
+    public void desactivarPresentacion(Presentacion presentacion) throws PersistenciaException {
+        if (presentacion == null) {
+            throw new IllegalArgumentException("La presentación no puede ser nula.");
+        }
+        if (presentacion.getId() == null || presentacion.getId().isBlank()) {
+            throw new IllegalArgumentException("El ID de la presentación es obligatorio para desactivarla.");
+        }
+
+        presentacion.setActiva(false);
+        catalogoRepositoryJdbc.eliminar(presentacion.getId().trim());
     }
 
     // --- Validaciones ---
@@ -104,8 +139,8 @@ public class ServicioCatalogo {
         if (marca == null) {
             throw new IllegalArgumentException("La marca no puede ser nula.");
         }
-        if (marca.getId() <= 0) {
-            throw new IllegalArgumentException("El ID de la marca debe ser mayor a cero.");
+        if (marca.getId() == null || marca.getId().isBlank()) {
+            throw new IllegalArgumentException("El ID de la marca es obligatorio.");
         }
         if (marca.getNombre() == null || marca.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre de la marca es obligatorio.");
@@ -118,14 +153,4 @@ public class ServicioCatalogo {
         }
     }
 
-    private void validarIdEntero(String id, String entidad) {
-        try {
-            int valor = Integer.parseInt(id);
-            if (valor <= 0) {
-                throw new IllegalArgumentException("El ID de " + entidad + " debe ser mayor a cero.");
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("El ID de " + entidad + " debe ser un número válido.", e);
-        }
-    }
 }

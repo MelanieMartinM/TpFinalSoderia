@@ -69,6 +69,7 @@ try(PreparedStatement ps =conexion.prepareStatement(SQL_INSERTAR)){
 }
     }
 
+
     @Override
     public Producto buscarPorId(String id) throws PersistenciaException {
         try(PreparedStatement ps = conexion.prepareStatement(SQL_BUSCAR_POR_ID)){
