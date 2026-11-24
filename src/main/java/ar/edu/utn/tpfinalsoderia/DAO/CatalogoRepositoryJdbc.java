@@ -84,7 +84,7 @@ public class CatalogoRepositoryJdbc extends RepositorioJdbc<Presentacion> {
             ps.setString(2, presentacion.getNombre());
             setIdOrNull(ps, 3, presentacion.getProducto() != null ? presentacion.getProducto().getId() : null);
             setIdOrNull(ps, 4, presentacion.getEnvase() != null ? presentacion.getEnvase().getId() : null);
-            setIdOrNull(ps, 5, String.valueOf(presentacion.getMarca() != null ? presentacion.getMarca().getId() : null));
+            setIdOrNull(ps, 5, presentacion.getMarca() != null ? presentacion.getMarca().getId() : null);
             ps.setBigDecimal(6, presentacion.getPrecioLlenado());
             ps.setBoolean(7, presentacion.isActiva());
             ps.executeUpdate();
@@ -128,7 +128,7 @@ public class CatalogoRepositoryJdbc extends RepositorioJdbc<Presentacion> {
             ps.setString(1, presentacion.getNombre());
             setIdOrNull(ps, 2, presentacion.getProducto() != null ? presentacion.getProducto().getId() : null);
             setIdOrNull(ps, 3, presentacion.getEnvase() != null ? presentacion.getEnvase().getId() : null);
-            setIdOrNull(ps, 4, String.valueOf(presentacion.getMarca() != null ? presentacion.getMarca().getId() : null));
+            setIdOrNull(ps, 4, presentacion.getMarca() != null ? presentacion.getMarca().getId() : null);
             ps.setBigDecimal(5, presentacion.getPrecioLlenado());
             ps.setBoolean(6, presentacion.isActiva());
             ps.setString(7, presentacion.getId());
@@ -154,5 +154,9 @@ public class CatalogoRepositoryJdbc extends RepositorioJdbc<Presentacion> {
         } else {
             ps.setString(index, valor);
         }
+    }
+    @Override
+    public void desactivar(String id) {
+        eliminar(id); // Para esta entidad, eliminar ya realiza la baja lógica.
     }
 }

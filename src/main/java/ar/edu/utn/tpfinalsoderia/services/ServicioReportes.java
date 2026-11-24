@@ -25,7 +25,7 @@ public class ServicioReportes {
         private final String tipoCajonDesc;
         private int saldoActual;
 
-        public FilaSaldoCajonCliente(
+        public FilaSaldoACajonCliente(
                 String clienteId,
                 String clienteNombre,
                 String tipoCajonId,

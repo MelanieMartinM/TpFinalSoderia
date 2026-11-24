@@ -21,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.util.StringConverter;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -53,6 +54,18 @@ public class PedidosController {
 
     @FXML
     public void initialize() {
+        cmbCliente.setConverter(new StringConverter<>() {
+            @Override public String toString(Cliente c) { return c == null ? "" : c.getId() + " - " + c.getNombre(); }
+            @Override public Cliente fromString(String texto) { return null; }
+        });
+        cmbPresentacion.setConverter(new StringConverter<>() {
+            @Override public String toString(Presentacion p) { return p == null ? "" : p.getId() + " - " + p.getNombre(); }
+            @Override public Presentacion fromString(String texto) { return null; }
+        });
+        cmbTipoCajon.setConverter(new StringConverter<>() {
+            @Override public String toString(TipoCajon c) { return c == null ? "" : c.getId() + " - " + c.getDescripcion(); }
+            @Override public TipoCajon fromString(String texto) { return null; }
+        });
         configurarColumnas();
         tblDetalles.setItems(detalles);
         inicializarServicio();
@@ -66,8 +79,32 @@ public class PedidosController {
             CatalogoRepositoryJdbc catalogoRepo = new CatalogoRepositoryJdbc();
             this.servicioPedidos = new ServicioPedidos(pedidoRepo, catalogoRepo);
             cargarPresentaciones();
-        } catch ( PersistenciaException | IllegalStateException e) {
+            cargarRepartidoresYTipos();
+        } catch ( PersistenciaException | IllegalStateException | SQLException e) {
             mostrarError("Sin conexión a BD: " + e.getMessage());
+        }
+    }
+
+    private void cargarRepartidoresYTipos() throws SQLException {
+        try (Connection conexion = ConexionFactory.abrirConexion();
+             java.sql.PreparedStatement clientes = conexion.prepareStatement(
+                     "SELECT id, nombre FROM clientes WHERE activo=TRUE ORDER BY nombre");
+             java.sql.ResultSet rsClientes = clientes.executeQuery()) {
+            while (rsClientes.next()) {
+                Cliente c = new Cliente();
+                c.setId(rsClientes.getString("id"));
+                c.setNombre(rsClientes.getString("nombre"));
+                cmbCliente.getItems().add(c);
+            }
+            try (java.sql.PreparedStatement tipos = conexion.prepareStatement(
+                    "SELECT id, codigo, descripcion, capacidad FROM tipos_cajon ORDER BY descripcion");
+                 java.sql.ResultSet rsTipos = tipos.executeQuery()) {
+                while (rsTipos.next()) {
+                    cmbTipoCajon.getItems().add(new TipoCajon(rsTipos.getString("id"),
+                            rsTipos.getString("codigo"), rsTipos.getString("descripcion"),
+                            rsTipos.getInt("capacidad")));
+                }
+            }
         }
     }
 
