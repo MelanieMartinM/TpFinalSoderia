@@ -24,135 +24,60 @@ import java.util.Objects;
 
 public class InventarioRepositoryJdbc {
 
-    private Connection conexion;
+    private final Connection conexion;
 
-    // Constructor vacío: abre su propia conexión (para pantallas que solo leen)
-    public InventarioRepositoryJdbc() {
-        conectar();
-    }
-
-    // Constructor con conexión: para cuando un servicio hace una transacción
     public InventarioRepositoryJdbc(Connection conexion) {
         this.conexion = Objects.requireNonNull(conexion, "La conexión no puede ser nula.");
     }
 
-    private void conectar() throws PersistenciaException {
-        try {
-            this.conexion = ConexionFactory.abrirConexion();
-        } catch (SQLException e) {
-            throw new PersistenciaException("No se pudo conectar a la base de datos", e);
-        }
+    public Connection getConexion() { return conexion; }
+
+    private static String titularId(Cliente titular) {
+        if (titular == null || titular.getId() == null || titular.getId().isBlank())
+            throw new IllegalArgumentException("Debe indicar el repartidor titular.");
+        return titular.getId();
     }
 
     public StockProducto buscarStockProducto(Cliente titular, Presentacion presentacion) {
-        Objects.requireNonNull(presentacion, "La presentación no puede ser nula.");
-
-        String sqlConTitular = "SELECT id, cliente_id, presentacion_id, disponibles FROM stock_producto WHERE cliente_id = ? AND presentacion_id = ?";
-        String sqlSinTitular = "SELECT id, cliente_id, presentacion_id, disponibles FROM stock_producto WHERE cliente_id IS NULL AND presentacion_id = ?";
-        boolean tieneTitular = titular != null && titular.getId() != null && !titular.getId().isBlank();
-        String sql = tieneTitular ? sqlConTitular : sqlSinTitular;
-
+        String clienteId = titularId(titular);
+        Objects.requireNonNull(presentacion, "La presentación es obligatoria.");
+        asegurarFila("stock_producto", "presentacion_id", clienteId, presentacion.getId());
+        String sql = "SELECT disponibles FROM stock_producto WHERE cliente_id = ? AND presentacion_id = ? FOR UPDATE";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            if (tieneTitular) {
-                ps.setString(1, titular.getId());
-                ps.setString(2, presentacion.getId());
-            } else {
-                ps.setString(1, presentacion.getId());
-            }
-
+            ps.setString(1, clienteId); ps.setString(2, presentacion.getId());
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new StockProducto(
-                            rs.getString("id"),
-                            titular,
-                            presentacion,
-                            rs.getInt("disponibles")
-                    );
-                }
+                return rs.next() ? new StockProducto(titular, presentacion, rs.getInt(1)) : null;
             }
-            return null;
-        } catch (SQLException e) {
-            throw new PersistenciaException("Error al buscar stock de producto.", e);
-        }
+        } catch (SQLException e) { throw new PersistenciaException("Error al consultar stock producto.", e); }
     }
 
     public void guardarStockProducto(StockProducto stock) {
-        Objects.requireNonNull(stock, "El stock de producto no puede ser nulo.");
-        Objects.requireNonNull(stock.getPresentacion(), "La presentación del stock no puede ser nula.");
-
-        String sql = """
-                INSERT INTO stock_producto (id, cliente_id, presentacion_id, disponibles)
-                VALUES (?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    disponibles = VALUES(disponibles)
-                """;
-
+        String sql = "INSERT INTO stock_producto (cliente_id,presentacion_id,disponibles) VALUES (?,?,?) ON DUPLICATE KEY UPDATE disponibles=VALUES(disponibles)";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, stock.getId());
-            ps.setString(2, stock.getTitular() != null ? stock.getTitular().getId() : null);
-            ps.setString(3, stock.getPresentacion().getId());
-            ps.setInt(4, stock.getDisponibles());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new PersistenciaException("Error al guardar stock de producto.", e);
-        }
+            ps.setString(1, titularId(stock.getTitular())); ps.setString(2, stock.getPresentacion().getId());
+            ps.setInt(3, stock.getDisponibles()); ps.executeUpdate();
+        } catch (SQLException e) { throw new PersistenciaException("Error al guardar stock producto.", e); }
     }
 
     public StockEnvase buscarStockEnvase(Cliente titular, Envase envase) {
-        Objects.requireNonNull(envase, "El envase no puede ser nulo.");
-
-        String sqlConTitular = "SELECT id, cliente_id, envase_id, aptos, sucios FROM stock_envase WHERE cliente_id = ? AND envase_id = ?";
-        String sqlSinTitular = "SELECT id, cliente_id, envase_id, aptos, sucios FROM stock_envase WHERE cliente_id IS NULL AND envase_id = ?";
-        boolean tieneTitular = titular != null && titular.getId() != null && !titular.getId().isBlank();
-        String sql = tieneTitular ? sqlConTitular : sqlSinTitular;
-
+        String clienteId = titularId(titular);
+        Objects.requireNonNull(envase, "El envase es obligatorio.");
+        asegurarFila("stock_envase", "envase_id", clienteId, envase.getId());
+        String sql = "SELECT aptos,sucios FROM stock_envase WHERE cliente_id=? AND envase_id=? FOR UPDATE";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            if (tieneTitular) {
-                ps.setString(1, titular.getId());
-                ps.setString(2, envase.getId());
-            } else {
-                ps.setString(1, envase.getId());
-            }
-
+            ps.setString(1, clienteId); ps.setString(2, envase.getId());
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new StockEnvase(
-                            rs.getString("id"),
-                            titular,
-                            envase,
-                            rs.getInt("aptos"),
-                            rs.getInt("sucios")
-                    );
-                }
+                return rs.next() ? new StockEnvase(titular, envase, rs.getInt(1), rs.getInt(2)) : null;
             }
-            return null;
-        } catch (SQLException e) {
-            throw new PersistenciaException("Error al buscar stock de envase.", e);
-        }
+        } catch (SQLException e) { throw new PersistenciaException("Error al consultar stock envase.", e); }
     }
 
     public void guardarStockEnvase(StockEnvase stock) {
-        Objects.requireNonNull(stock, "El stock de envase no puede ser nulo.");
-        Objects.requireNonNull(stock.getEnvase(), "El envase del stock no puede ser nulo.");
-
-        String sql = """
-                INSERT INTO stock_envase (id, cliente_id, envase_id, aptos, sucios)
-                VALUES (?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    aptos = VALUES(aptos),
-                    sucios = VALUES(sucios)
-                """;
-
+        String sql = "INSERT INTO stock_envase (cliente_id,envase_id,aptos,sucios) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE aptos=VALUES(aptos),sucios=VALUES(sucios)";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, stock.getId());
-            ps.setString(2, stock.getTitular() != null ? stock.getTitular().getId() : null);
-            ps.setString(3, stock.getEnvase().getId());
-            ps.setInt(4, stock.getAptos());
-            ps.setInt(5, stock.getSucios());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new PersistenciaException("Error al guardar stock de envase.", e);
-        }
+            ps.setString(1, titularId(stock.getTitular())); ps.setString(2, stock.getEnvase().getId());
+            ps.setInt(3, stock.getAptos()); ps.setInt(4, stock.getSucios()); ps.executeUpdate();
+        } catch (SQLException e) { throw new PersistenciaException("Error al guardar stock envase.", e); }
     }
 
     public void registrarMovimientoEnvase(MovimientoEnvase movimiento) {
@@ -164,7 +89,7 @@ public class InventarioRepositoryJdbc {
 
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, movimiento.getId());
-            ps.setString(2, movimiento.getTitular() != null ? movimiento.getTitular().getId() : null);
+            ps.setString(2, titularId(movimiento.getTitular()));
             ps.setString(3, movimiento.getEnvase().getId());
             ps.setString(4, movimiento.getTipo().name());
             ps.setInt(5, movimiento.getCantidad());
@@ -176,23 +101,11 @@ public class InventarioRepositoryJdbc {
     }
 
     public void guardarStockCajon(StockCajon stock) {
-        Objects.requireNonNull(stock, "El stock de cajón no puede ser nulo.");
-        Objects.requireNonNull(stock.getTipo(), "El tipo de cajón no puede ser nulo.");
-
-        String sql = """
-                INSERT INTO stock_cajon (tipo_cajon_id, disponibles_fabrica)
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE
-                    disponibles_fabrica = VALUES(disponibles_fabrica)
-                """;
-
+        String sql = "INSERT INTO stock_cajon (cliente_id,tipo_cajon_id,disponibles) VALUES (?,?,?) ON DUPLICATE KEY UPDATE disponibles=VALUES(disponibles)";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, stock.getTipo().getId());
-            ps.setInt(2, stock.getDisponiblesFabrica());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new PersistenciaException("Error al guardar stock de cajón.", e);
-        }
+            ps.setString(1, titularId(stock.getTitular())); ps.setString(2, stock.getTipo().getId());
+            ps.setInt(3, stock.getDisponibles()); ps.executeUpdate();
+        } catch (SQLException e) { throw new PersistenciaException("Error al guardar stock cajón.", e); }
     }
 
     public void registrarMovimientoCajon(MovimientoCajon movimiento) {
@@ -203,7 +116,7 @@ public class InventarioRepositoryJdbc {
 
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, movimiento.getId());
-            ps.setString(2, movimiento.getCliente() != null ? movimiento.getCliente().getId() : null);
+            ps.setString(2, titularId(movimiento.getCliente()));
             ps.setString(3, movimiento.getTipoCajon().getId());
             ps.setInt(4, movimiento.getCantidad());
             ps.setTimestamp(5, movimiento.getFecha() != null ? Timestamp.valueOf(movimiento.getFecha()) : null);
@@ -217,7 +130,7 @@ public class InventarioRepositoryJdbc {
     public List<StockEnvase> listarStockEnvases() {
         List<StockEnvase> lista = new ArrayList<>();
         String sql = """
-                SELECT se.id, se.cliente_id, c.nombre AS cliente_nombre,
+                SELECT se.cliente_id, c.nombre AS cliente_nombre,
                        se.envase_id, e.descripcion AS envase_desc,
                        se.aptos, se.sucios
                 FROM stock_envase se
@@ -241,7 +154,6 @@ public class InventarioRepositoryJdbc {
                 envase.setDescripcion(rs.getString("envase_desc"));
 
                 lista.add(new StockEnvase(
-                        rs.getString("id"),
                         titular,
                         envase,
                         rs.getInt("aptos"),
@@ -257,7 +169,7 @@ public class InventarioRepositoryJdbc {
     public List<StockProducto> listarStockProductos() {
         List<StockProducto> lista = new ArrayList<>();
         String sql = """
-                SELECT sp.id, sp.cliente_id, c.nombre AS cliente_nombre,
+                SELECT sp.cliente_id, c.nombre AS cliente_nombre,
                        sp.presentacion_id, p.nombre AS pres_nombre,
                        sp.disponibles
                 FROM stock_producto sp
@@ -281,7 +193,6 @@ public class InventarioRepositoryJdbc {
                 pres.setNombre(rs.getString("pres_nombre"));
 
                 lista.add(new StockProducto(
-                        rs.getString("id"),
                         titular,
                         pres,
                         rs.getInt("disponibles")
@@ -346,10 +257,11 @@ public class InventarioRepositoryJdbc {
     public List<StockCajon> listarStockCajones() {
         List<StockCajon> lista = new ArrayList<>();
         String sql = """
-                SELECT sc.tipo_cajon_id, tc.descripcion AS cajon_desc, tc.capacidad,
-                       sc.disponibles_fabrica
+                SELECT sc.cliente_id, c.nombre AS cliente_nombre, sc.tipo_cajon_id, tc.descripcion AS cajon_desc, tc.capacidad,
+                       sc.disponibles
                 FROM stock_cajon sc
-                LEFT JOIN tipo_cajon tc ON sc.tipo_cajon_id = tc.id
+                LEFT JOIN clientes c ON c.id = sc.cliente_id
+                LEFT JOIN tipos_cajon tc ON sc.tipo_cajon_id = tc.id
                 """;
 
         try (PreparedStatement ps = conexion.prepareStatement(sql);
@@ -360,7 +272,10 @@ public class InventarioRepositoryJdbc {
                 tipo.setDescripcion(rs.getString("cajon_desc"));
                 tipo.setCapacidad(rs.getInt("capacidad"));
 
-                lista.add(new StockCajon(tipo, rs.getInt("disponibles_fabrica")));
+                Cliente titular = new Cliente();
+                titular.setId(rs.getString("cliente_id"));
+                titular.setNombre(rs.getString("cliente_nombre"));
+                lista.add(new StockCajon(titular, tipo, rs.getInt("disponibles")));
             }
             return lista;
         } catch (SQLException e) {
@@ -376,7 +291,7 @@ public class InventarioRepositoryJdbc {
                        mc.cantidad, mc.fecha, mc.es_retorno
                 FROM movimiento_cajon mc
                 LEFT JOIN clientes c ON mc.cliente_id = c.id
-                LEFT JOIN tipo_cajon tc ON mc.tipo_cajon_id = tc.id
+                LEFT JOIN tipos_cajon tc ON mc.tipo_cajon_id = tc.id
                 ORDER BY mc.fecha DESC
                 """;
 
@@ -414,61 +329,35 @@ public class InventarioRepositoryJdbc {
         }
     }
 
-    public int saldoEnvases(Cliente cliente, Envase envase) {
-        Objects.requireNonNull(envase, "El envase no puede ser nulo.");
-
-        String sqlConTitular = "SELECT COALESCE(SUM(aptos + sucios), 0) AS saldo FROM stock_envase WHERE envase_id = ? AND cliente_id = ?";
-        String sqlSinTitular = "SELECT COALESCE(SUM(aptos + sucios), 0) AS saldo FROM stock_envase WHERE envase_id = ? AND cliente_id IS NULL";
-        boolean tieneTitular = cliente != null && cliente.getId() != null && !cliente.getId().isBlank();
-        String sql = tieneTitular ? sqlConTitular : sqlSinTitular;
-
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, envase.getId());
-            if (tieneTitular) {
-                ps.setString(2, cliente.getId());
-            }
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("saldo");
-                }
-            }
-            return 0;
-        } catch (SQLException e) {
-            throw new PersistenciaException("Error al consultar saldo de envases.", e);
-        }
+    public int saldoEnvases(Cliente titular, Envase envase) {
+        StockEnvase stock = buscarStockEnvase(titular, envase);
+        return stock == null ? 0 : stock.getAptos() + stock.getSucios();
     }
 
-    public int saldoCajones(Cliente cliente, TipoCajon tipo) {
-        Objects.requireNonNull(tipo, "El tipo de cajón no puede ser nulo.");
-
-        String sqlConTitular = """
-                SELECT COALESCE(SUM(CASE WHEN es_retorno THEN cantidad ELSE -cantidad END), 0) AS saldo
-                FROM movimiento_cajon
-                WHERE tipo_cajon_id = ? AND cliente_id = ?
-                """;
-        String sqlSinTitular = """
-                SELECT COALESCE(SUM(CASE WHEN es_retorno THEN cantidad ELSE -cantidad END), 0) AS saldo
-                FROM movimiento_cajon
-                WHERE tipo_cajon_id = ? AND cliente_id IS NULL
-                """;
-        boolean tieneTitular = cliente != null && cliente.getId() != null && !cliente.getId().isBlank();
-        String sql = tieneTitular ? sqlConTitular : sqlSinTitular;
-
+    public int saldoCajones(Cliente titular, TipoCajon tipo) {
+        asegurarFila("stock_cajon", "tipo_cajon_id", titularId(titular), tipo.getId());
+        String sql = "SELECT disponibles FROM stock_cajon WHERE cliente_id=? AND tipo_cajon_id=? FOR UPDATE";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, tipo.getId());
-            if (tieneTitular) {
-                ps.setString(2, cliente.getId());
-            }
+            ps.setString(1, titularId(titular)); ps.setString(2, tipo.getId());
+            try (ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getInt(1) : 0; }
+        } catch (SQLException e) { throw new PersistenciaException("Error al consultar saldo de cajones.", e); }
+    }
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("saldo");
-                }
+    /** En una transacción crea o bloquea la fila antes de leer su saldo. */
+    private void asegurarFila(String tabla, String columna, String clienteId, String tipoId) {
+        if (tipoId == null || tipoId.isBlank()) throw new IllegalArgumentException("Falta identificar el tipo.");
+        try {
+            if (conexion.getAutoCommit()) return;
+            // Los nombres son constantes internas del repositorio; los valores usan parámetros.
+            String sql = "INSERT INTO " + tabla + " (cliente_id," + columna + ") VALUES (?,?) " +
+                    "ON DUPLICATE KEY UPDATE cliente_id=VALUES(cliente_id)";
+            try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+                ps.setString(1, clienteId);
+                ps.setString(2, tipoId);
+                ps.executeUpdate();
             }
-            return 0;
         } catch (SQLException e) {
-            throw new PersistenciaException("Error al consultar saldo de cajones.", e);
+            throw new PersistenciaException("Error al asegurar la fila de stock.", e);
         }
     }
 }

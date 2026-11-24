@@ -1,7 +1,9 @@
 package ar.edu.utn.tpfinalsoderia.interfaces;
 
+import java.math.BigDecimal;
+
 public interface Facturable
 {
-    float calcularTotal();
+    BigDecimal calcularTotal();
     String generarComprobante();
 }

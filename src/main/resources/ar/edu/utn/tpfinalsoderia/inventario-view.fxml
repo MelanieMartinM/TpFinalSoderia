@@ -35,9 +35,9 @@
                             <Label text="Tipo de Operación:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                             <ComboBox fx:id="cmbOperacion" prefWidth="310.0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-                            <Label text="Titular (Fábrica o Cliente Fasón):" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <Label text="Repartidor titular:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                             <HBox spacing="10.0" alignment="CENTER_LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1">
-                                <CheckBox fx:id="chkEsFason" text="Es Fasón (Cliente)" onAction="#onToggleFason"/>
+                                <CheckBox fx:id="chkEsFason" text="Repartidor" onAction="#onToggleFason"/>
                                 <TextField fx:id="txtClienteId" promptText="ID Cliente (ej: C001)" disable="true" prefWidth="170.0"/>
                             </HBox>
 
@@ -126,12 +126,13 @@
 
                     <Label fx:id="lblEstadoCajon" text=""/>
 
-                    <Label text="Stock de Cajones en Fábrica" style="-fx-font-weight: bold;"/>
+                    <Label text="Stock de cajones por repartidor en planta" style="-fx-font-weight: bold;"/>
                     <TableView fx:id="tblStockCajones" prefHeight="150.0">
                         <columns>
+                            <TableColumn fx:id="colCajonTitular" text="Repartidor" prefWidth="160.0"/>
                             <TableColumn fx:id="colCajonTipo" text="Tipo de Cajón" prefWidth="320.0"/>
                             <TableColumn fx:id="colCajonCapacidad" text="Capacidad (botellas)" prefWidth="180.0"/>
-                            <TableColumn fx:id="colCajonDisponibles" text="Disponibles Fábrica" prefWidth="180.0"/>
+                            <TableColumn fx:id="colCajonDisponibles" text="Disponibles en planta" prefWidth="180.0"/>
                         </columns>
                     </TableView>
 

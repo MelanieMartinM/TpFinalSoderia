@@ -25,7 +25,7 @@
             </padding>
 
             <HBox spacing="10.0" alignment="CENTER_LEFT">
-                <CheckBox fx:id="chkEsFason" text="Cliente Fasón" onAction="#onToggleFason"/>
+                <CheckBox fx:id="chkEsFason" text="Repartidor" onAction="#onToggleFason"/>
                 <TextField fx:id="txtClienteId" promptText="ID Cliente" disable="true" prefWidth="140.0"/>
                 <Label text="ID Pedido:"/>
                 <TextField fx:id="txtPedidoId" promptText="Opcional" prefWidth="140.0"/>
@@ -73,11 +73,18 @@
                 <ComboBox fx:id="cmbMedioPago" prefWidth="140.0"/>
                 <Label text="Monto:"/>
                 <TextField fx:id="txtMontoCobro" prefWidth="100.0"/>
-                <CheckBox fx:id="chkSinCobro" text="Autorización sin cobro" onAction="#onToggleSinCobro"/>
-                <TextField fx:id="txtResponsable" promptText="Responsable" disable="true" prefWidth="130.0"/>
-                <TextField fx:id="txtMotivo" promptText="Motivo" disable="true" prefWidth="150.0"/>
+                <CheckBox fx:id="chkSinCobro" text="Paga después" onAction="#onToggleSinCobro"/>
+                <TextField fx:id="txtResponsable" visible="false" managed="false" disable="true"/>
+                <TextField fx:id="txtMotivo" visible="false" managed="false" disable="true"/>
                 <Button text="Confirmar Retiro y Cobro" onAction="#onConfirmarRetiro"
                         style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+
+            <HBox spacing="8.0" alignment="CENTER_LEFT">
+                <Label text="Pago posterior: ID del retiro"/>
+                <TextField fx:id="txtRetiroPagoId" promptText="ID retiro" prefWidth="200.0"/>
+                <Label text="Usá el medio y monto indicados arriba."/>
+                <Button text="Registrar pago posterior" onAction="#onCobrarPosterior"/>
             </HBox>
 
             <Label fx:id="lblEstado" text=""/>

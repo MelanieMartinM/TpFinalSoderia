@@ -14,7 +14,8 @@ import ar.edu.utn.tpfinalsoderia.models.Presentacion;
 import ar.edu.utn.tpfinalsoderia.models.Retiro;
 import ar.edu.utn.tpfinalsoderia.models.TipoCajon;
 import ar.edu.utn.tpfinalsoderia.services.ServicioRetirosCobros;
-import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import java.math.BigDecimal;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -60,6 +61,7 @@ public class RetirosController {
     @FXML private CheckBox chkSinCobro;
     @FXML private TextField txtResponsable;
     @FXML private TextField txtMotivo;
+    @FXML private TextField txtRetiroPagoId;
     @FXML private Label lblEstado;
 
     @FXML private TableView<Cobro> tblCobros;
@@ -76,6 +78,9 @@ public class RetirosController {
         cmbMedioPago.setItems(FXCollections.observableArrayList(MedioDePago.values()));
         cmbMedioPago.getSelectionModel().selectFirst();
         tblDetalles.setItems(detallesCargados);
+        chkEsFason.setSelected(true);
+        chkEsFason.setDisable(true);
+        txtClienteId.setDisable(false);
         configurarColumnas();
         inicializarServicio();
     }
@@ -102,15 +107,15 @@ public class RetirosController {
         ));
         colDetPedido.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getCantidadPedida()));
         colDetRetirado.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getCantidadRetirada()));
-        colDetPrecio.setCellValueFactory(data -> new SimpleFloatProperty(data.getValue().getPrecioAplicado()));
+        colDetPrecio.setCellValueFactory(data -> new SimpleObjectProperty<Number>(data.getValue().getPrecioAplicado()));
         colDetCajones.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getCantidadCajones()));
-        colDetSubtotal.setCellValueFactory(data -> new SimpleFloatProperty(data.getValue().calcularSubtotal()));
+        colDetSubtotal.setCellValueFactory(data -> new SimpleObjectProperty<Number>(data.getValue().calcularSubtotal()));
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         colCobFecha.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getFecha() != null ? data.getValue().getFecha().format(fmt) : "-"
         ));
-        colCobMonto.setCellValueFactory(data -> new SimpleFloatProperty(data.getValue().getMonto()));
+        colCobMonto.setCellValueFactory(data -> new SimpleObjectProperty<Number>(data.getValue().getMonto()));
         colCobMedio.setCellValueFactory(data -> new SimpleStringProperty(
                 data.getValue().getMedioPago() != null ? data.getValue().getMedioPago().name() : "-"
         ));
@@ -132,12 +137,32 @@ public class RetirosController {
     @FXML
     private void onToggleSinCobro() {
         boolean sinCobro = chkSinCobro.isSelected();
-        txtResponsable.setDisable(!sinCobro);
-        txtMotivo.setDisable(!sinCobro);
+        txtResponsable.setDisable(true);
+        txtMotivo.setDisable(true);
         txtMontoCobro.setDisable(sinCobro);
         cmbMedioPago.setDisable(sinCobro);
         if (sinCobro) {
             txtMontoCobro.setText("0");
+        }
+    }
+
+    @FXML
+    private void onCobrarPosterior() {
+        if (servicioRetirosCobros == null) {
+            mostrarError("Sin conexión a la base de datos.");
+            return;
+        }
+        try {
+            BigDecimal monto = new BigDecimal(txtMontoCobro.getText().trim());
+            Cobro cobro = new Cobro(null, monto, cmbMedioPago.getValue(),
+                    LocalDateTime.now(), false, null, null);
+            servicioRetirosCobros.registrarCobroPosterior(txtRetiroPagoId.getText().trim(), cobro);
+            mostrarExito("Pago posterior registrado.");
+            cargarCobros();
+        } catch (NumberFormatException e) {
+            mostrarError("El monto del cobro debe ser numérico.");
+        } catch (ReglaNegocioException | PersistenciaException e) {
+            mostrarError(e.getMessage());
         }
     }
 
@@ -150,7 +175,7 @@ public class RetirosController {
                 return;
             }
             int cantRetirada = Integer.parseInt(txtCantidadRetirada.getText().trim());
-            float precio = Float.parseFloat(txtPrecioAplicado.getText().trim());
+            BigDecimal precio = new BigDecimal(txtPrecioAplicado.getText().trim());
             int cantPedida = txtCantidadPedida.getText().trim().isEmpty() ? 0 : Integer.parseInt(txtCantidadPedida.getText().trim());
             int cantCajones = txtCantidadCajones.getText().trim().isEmpty() ? 0 : Integer.parseInt(txtCantidadCajones.getText().trim());
 
@@ -191,9 +216,9 @@ public class RetirosController {
     }
 
     private void actualizarTotal() {
-        float total = 0f;
+        BigDecimal total = BigDecimal.ZERO;
         for (DetalleRetiro d : detallesCargados) {
-            total += d.calcularSubtotal();
+            total = total.add(d.calcularSubtotal());
         }
         lblTotalRetiro.setText("Total a retirar: $" + total);
         if (!chkSinCobro.isSelected()) {
@@ -227,7 +252,7 @@ public class RetirosController {
                     null
             );
 
-            float monto = chkSinCobro.isSelected() ? 0f : Float.parseFloat(txtMontoCobro.getText().trim());
+            BigDecimal monto = chkSinCobro.isSelected() ? BigDecimal.ZERO : new BigDecimal(txtMontoCobro.getText().trim());
             Cobro cobro = new Cobro(
                     null,
                     monto,

@@ -42,12 +42,12 @@
                 </columns>
             </TableView>
 
-            <Label text="2. Saldos Netos de Cajones por Cliente" style="-fx-font-weight: bold;"/>
+            <Label text="2. Cajones por repartidor disponibles en planta" style="-fx-font-weight: bold;"/>
             <TableView fx:id="tblRepCajones" prefHeight="150.0">
                 <columns>
-                    <TableColumn fx:id="colRepCajCliente" text="Cliente" prefWidth="220.0"/>
+                    <TableColumn fx:id="colRepCajCliente" text="Repartidor" prefWidth="220.0"/>
                     <TableColumn fx:id="colRepCajTipo" text="Tipo de Cajón" prefWidth="240.0"/>
-                    <TableColumn fx:id="colRepCajSaldo" text="Saldo en Poder" prefWidth="160.0"/>
+                    <TableColumn fx:id="colRepCajSaldo" text="Disponibles en planta" prefWidth="160.0"/>
                 </columns>
             </TableView>
 

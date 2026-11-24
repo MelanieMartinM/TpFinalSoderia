@@ -1,6 +1,7 @@
 package ar.edu.utn.tpfinalsoderia.models;
 
 import java.util.Objects;
+import java.math.BigDecimal;
 
 public class DetalleRetiro
 {
@@ -10,7 +11,7 @@ public class DetalleRetiro
     private Presentacion presentacion;
     private int cantidadPedida;
     private int cantidadRetirada;
-    private float precioAplicado;
+    private BigDecimal precioAplicado;
     private TipoCajon tipoCajon;
     private int cantidadCajones;
 
@@ -19,7 +20,7 @@ public class DetalleRetiro
 
     }
 
-    public DetalleRetiro(String id, String pedidoId, String detallePedidoId, Presentacion presentacion, int cantidadPedida, int cantidadRetirada, float precioAplicado, TipoCajon tipoCajon, int cantidadCajones)
+    public DetalleRetiro(String id, String pedidoId, String detallePedidoId, Presentacion presentacion, int cantidadPedida, int cantidadRetirada, BigDecimal precioAplicado, TipoCajon tipoCajon, int cantidadCajones)
     {
         this.id = id;
         this.pedidoId = pedidoId;
@@ -32,9 +33,9 @@ public class DetalleRetiro
         this.cantidadCajones = cantidadCajones;
     }
 
-    public float calcularSubtotal()
+    public BigDecimal calcularSubtotal()
     {
-        return cantidadRetirada * precioAplicado;
+        return precioAplicado.multiply(BigDecimal.valueOf(cantidadRetirada));
     }
 
     public String getId() { return id; }
@@ -49,8 +50,8 @@ public class DetalleRetiro
     public void setCantidadPedida(int cantidadPedida) { this.cantidadPedida = cantidadPedida; }
     public int getCantidadRetirada() { return cantidadRetirada; }
     public void setCantidadRetirada(int cantidadRetirada) { this.cantidadRetirada = cantidadRetirada; }
-    public float getPrecioAplicado() { return precioAplicado; }
-    public void setPrecioAplicado(float precioAplicado) { this.precioAplicado = precioAplicado; }
+    public BigDecimal getPrecioAplicado() { return precioAplicado; }
+    public void setPrecioAplicado(BigDecimal precioAplicado) { this.precioAplicado = precioAplicado; }
     public TipoCajon getTipoCajon() { return tipoCajon; }
     public void setTipoCajon(TipoCajon tipoCajon) { this.tipoCajon = tipoCajon; }
     public int getCantidadCajones() { return cantidadCajones; }

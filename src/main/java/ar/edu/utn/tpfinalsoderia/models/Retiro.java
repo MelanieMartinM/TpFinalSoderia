@@ -2,6 +2,7 @@ package ar.edu.utn.tpfinalsoderia.models;
 
 import ar.edu.utn.tpfinalsoderia.interfaces.Facturable;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,12 +32,12 @@ public class Retiro implements Facturable
     }
 
     @Override
-    public float calcularTotal()
+    public BigDecimal calcularTotal()
     {
-        float total = 0f;
+        BigDecimal total = BigDecimal.ZERO;
         for (DetalleRetiro d : detalles)
         {
-            total += d.calcularSubtotal();
+            total = total.add(d.calcularSubtotal());
         }
         return total;
     }
@@ -44,7 +45,7 @@ public class Retiro implements Facturable
     @Override
     public String generarComprobante()
     {
-        String nombreCliente = (cliente != null && cliente.getNombre() != null) ? cliente.getNombre() : "Fábrica";
+        String nombreCliente = (cliente != null && cliente.getNombre() != null) ? cliente.getNombre() : "Sin titular";
 
         return "Retiro #" + id + " | Cliente: " + nombreCliente + " | Total: $" + calcularTotal();
     }
