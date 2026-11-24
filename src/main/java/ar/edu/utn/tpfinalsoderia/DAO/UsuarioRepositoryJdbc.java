@@ -138,4 +138,14 @@ public class UsuarioRepositoryJdbc extends RepositorioJdbc<Usuario> {
             throw new PersistenciaException("No se pudo eliminar el usuario.", e);
         }
     }
+    @Override
+    public void desactivar(String id) {
+        String sql = "UPDATE usuarios SET activo = FALSE WHERE id = ?";
+        try (java.sql.PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+        } catch (java.sql.SQLException e) {
+            throw new ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException("No se pudo desactivar el usuario.", e);
+        }
+    }
 }

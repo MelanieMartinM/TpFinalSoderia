@@ -44,6 +44,9 @@
                            -fx-text-fill: white;
                            -fx-font-size: 14px;"/>
 
+            <Button text="Catálogo" prefWidth="200" onAction="#abrirCatalogo"/>
+            <Button text="Pedidos" prefWidth="200" onAction="#abrirPedidos"/>
+
             <Button text="Retiros y cobros"
                     prefWidth="200"
                     onAction="#abrirRetiros"

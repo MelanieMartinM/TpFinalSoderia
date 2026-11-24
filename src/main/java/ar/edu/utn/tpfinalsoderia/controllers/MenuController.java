@@ -27,6 +27,16 @@ public class MenuController {
     }
 
     @FXML
+    private void abrirCatalogo() {
+        abrirPantalla("catalogo-view.fxml");
+    }
+
+    @FXML
+    private void abrirPedidos() {
+        abrirPantalla("pedidos-view.fxml");
+    }
+
+    @FXML
     private void abrirInventario() {
         abrirPantalla("inventario-view.fxml");
     }
