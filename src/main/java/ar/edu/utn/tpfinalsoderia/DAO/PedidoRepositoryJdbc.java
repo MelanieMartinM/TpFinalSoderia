@@ -110,7 +110,7 @@ public class PedidoRepositoryJdbc extends RepositorioJdbc<Pedido> {
         detalle.setCantidadCajones(rs.getInt("cantidad_cajones"));
 
         Presentacion presentacion = new Presentacion();
-        presentacion.setId(rs.getInt("presentacion_id"));
+        presentacion.setId(rs.getString("presentacion_id"));
         detalle.setPresentacion(presentacion);
 
         String tipoCajonId = rs.getString("tipo_cajon_id");

@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class Presentacion {
 
-    private int id;
+    private String id;
     private String nombre;
     private Producto producto;
     private Envase envase;
@@ -18,7 +18,7 @@ public class Presentacion {
     }
 
 
-    public Presentacion(int id, String nombre, Producto producto, Envase envase, Marca marca, BigDecimal precioLlenado, boolean activa) {
+    public Presentacion(String id, String nombre, Producto producto, Envase envase, Marca marca, BigDecimal precioLlenado, boolean activa) {
         this.id = id;
         this.nombre = nombre;
         this.producto = producto;
@@ -29,11 +29,11 @@ public class Presentacion {
     }
 
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

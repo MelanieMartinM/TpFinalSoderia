@@ -47,7 +47,7 @@ public class CatalogoRepositoryJdbc extends RepositorioJdbc<Presentacion> {
     @Override
     protected Presentacion mapear(ResultSet resultado) throws SQLException {
         Presentacion presentacion = new Presentacion();
-        presentacion.setId(resultado.getInt("id"));
+        presentacion.setId(resultado.getString("id"));
         presentacion.setNombre(resultado.getString("nombre"));
 
         String productoId = resultado.getString("producto_id");
@@ -80,7 +80,7 @@ public class CatalogoRepositoryJdbc extends RepositorioJdbc<Presentacion> {
     @Override
     public void guardar(Presentacion presentacion) throws PersistenciaException {
         try (PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR)) {
-            ps.setInt(1, presentacion.getId());
+            ps.setString(1, presentacion.getId());
             ps.setString(2, presentacion.getNombre());
             setIdOrNull(ps, 3, presentacion.getProducto() != null ? presentacion.getProducto().getId() : null);
             setIdOrNull(ps, 4, presentacion.getEnvase() != null ? presentacion.getEnvase().getId() : null);
@@ -131,7 +131,7 @@ public class CatalogoRepositoryJdbc extends RepositorioJdbc<Presentacion> {
             setIdOrNull(ps, 4, String.valueOf(presentacion.getMarca() != null ? presentacion.getMarca().getId() : null));
             ps.setBigDecimal(5, presentacion.getPrecioLlenado());
             ps.setBoolean(6, presentacion.isActiva());
-            ps.setInt(7, presentacion.getId());
+            ps.setString(7, presentacion.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new PersistenciaException("Error al actualizar la presentación id: " + presentacion.getId(), e);
