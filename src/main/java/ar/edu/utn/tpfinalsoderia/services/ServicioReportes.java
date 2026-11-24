@@ -5,9 +5,10 @@ import ar.edu.utn.tpfinalsoderia.DAO.RetiroCobroRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.models.Cliente;
 import ar.edu.utn.tpfinalsoderia.models.Cobro;
-import ar.edu.utn.tpfinalsoderia.models.MovimientoCajon;
+import ar.edu.utn.tpfinalsoderia.models.StockCajon;
 import ar.edu.utn.tpfinalsoderia.models.StockEnvase;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,7 +26,7 @@ public class ServicioReportes {
         private final String tipoCajonDesc;
         private int saldoActual;
 
-        public FilaSaldoACajonCliente(
+        public FilaSaldoCajonCliente(
                 String clienteId,
                 String clienteNombre,
                 String tipoCajonId,
@@ -78,7 +79,7 @@ public class ServicioReportes {
 
     public List<FilaSaldoCajonCliente> obtenerReporteSaldosCajonesPorCliente() {
         List<FilaSaldoCajonCliente> resultado = new ArrayList<>();
-        for (ar.edu.utn.tpfinalsoderia.models.StockCajon stock : inventarioRepo.listarStockCajones()) {
+        for (StockCajon stock : inventarioRepo.listarStockCajones()) {
             Cliente titular = stock.getTitular();
             if (titular == null || stock.getTipo() == null) continue;
             String nombre = titular.getNombre() == null ? titular.getId() : titular.getNombre();
@@ -90,17 +91,8 @@ public class ServicioReportes {
         return resultado;
     }
 
-    private FilaSaldoCajonCliente buscarFila(List<FilaSaldoCajonCliente> filas, String clienteId, String tipoCajonId) {
-        for (FilaSaldoCajonCliente f : filas) {
-            if (Objects.equals(f.getClienteId(), clienteId) && Objects.equals(f.getTipoCajonId(), tipoCajonId)) {
-                return f;
-            }
-        }
-        return null;
-    }
-
-    public java.math.BigDecimal calcularTotalCobrado() {
-        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+    public BigDecimal calcularTotalCobrado() {
+        BigDecimal total = BigDecimal.ZERO;
 
         String sql = "SELECT COALESCE(SUM(monto), 0) AS total_cobrado FROM cobros WHERE sin_cobro_autorizado = FALSE";
 
