@@ -1,13 +1,19 @@
-//Este controlador recibe los datos escritos en la pantalla. Si falta alguno, muestra un mensaje;
-// si ambos están completos, avisa que todavía no está implementada la verificación.
-
-
 package ar.edu.utn.tpfinalsoderia.controllers;
 
+import ar.edu.utn.tpfinalsoderia.HelloApplication;
+import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
+import ar.edu.utn.tpfinalsoderia.models.Usuario;
+import ar.edu.utn.tpfinalsoderia.services.ServicioLogin;
+
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+
+import java.io.IOException;
+import java.net.URL;
 
 public class LoginController {
 
@@ -20,6 +26,8 @@ public class LoginController {
     @FXML
     private Label mensaje;
 
+    private final ServicioLogin servicioLogin = new ServicioLogin();
+
     @FXML
     private void iniciarSesion() {
         String nombreUsuario = campoUsuario.getText().trim();
@@ -30,6 +38,39 @@ public class LoginController {
             return;
         }
 
-        mensaje.setText("La verificación de acceso todavía está pendiente.");
+        try {
+            Usuario usuario = servicioLogin.iniciarSesion(
+                    nombreUsuario,
+                    contrasena
+            );
+
+            if (usuario == null) {
+                mensaje.setText("Usuario o contraseña incorrectos.");
+                return;
+            }
+
+            abrirMenu();
+
+        } catch (PersistenciaException | IllegalStateException e) {
+            mensaje.setText("No se pudo conectar con la base de datos.");
+        }
+    }
+
+    private void abrirMenu() {
+        URL recurso = HelloApplication.class.getResource("menu-view.fxml");
+
+        if (recurso == null) {
+            mensaje.setText("No se encontró la pantalla del menú.");
+            return;
+        }
+
+        try {
+            Parent menu = FXMLLoader.load(recurso);
+            campoUsuario.getScene().setRoot(menu);
+
+        } catch (IOException e) {
+            mensaje.setText("No se pudo abrir el menú.");
+            e.printStackTrace();
+        }
     }
 }
