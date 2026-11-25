@@ -59,6 +59,8 @@ public class EnvaseRepositoryJdbc extends RepositorioJdbc<Envase> {
 
     @Override
     public void guardar(Envase envase) throws PersistenciaException {
+        if (envase != null && (envase.getId() == null || envase.getId().isBlank()))
+            envase.setId(java.util.UUID.randomUUID().toString());
         try (PreparedStatement ps = conexion.prepareStatement(SQL_INSERTAR)) {
             ps.setString(1, envase.getId());
             ps.setString(2, envase.getDescripcion());

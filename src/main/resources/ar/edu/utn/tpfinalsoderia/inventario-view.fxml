@@ -36,16 +36,13 @@
                             <ComboBox fx:id="cmbOperacion" prefWidth="310.0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
                             <Label text="Repartidor titular:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                            <HBox spacing="10.0" alignment="CENTER_LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1">
-                                <CheckBox fx:id="chkEsFason" text="Repartidor" onAction="#onToggleFason"/>
-                                <TextField fx:id="txtClienteId" promptText="ID Cliente (ej: C001)" disable="true" prefWidth="170.0"/>
-                            </HBox>
+                            <ComboBox fx:id="cmbCliente" promptText="Elegí un repartidor" prefWidth="310.0" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                            <Label text="ID Envase (Recepción / Devolución / Lavado):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                            <TextField fx:id="txtEnvaseId" promptText="Ej: ENV-SIF-1250" prefWidth="310.0" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label text="Tipo de envase:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <ComboBox fx:id="cmbEnvase" promptText="Elegí un envase" prefWidth="310.0" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                            <Label text="ID Presentación (solo Producción):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                            <TextField fx:id="txtPresentacionId" promptText="Ej: PRES-001" disable="true" prefWidth="310.0" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                            <Label text="Presentación (producción):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <ComboBox fx:id="cmbPresentacion" promptText="Elegí una presentación" prefWidth="310.0" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
                             <Label text="Cantidad:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
                             <TextField fx:id="txtCantidad" promptText="Cantidad de unidades" prefWidth="310.0" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
@@ -53,6 +50,7 @@
                             <HBox spacing="10.0" GridPane.rowIndex="5" GridPane.columnIndex="1">
                                 <Button text="Confirmar Operación" onAction="#onConfirmarOperacion"
                                         style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16;"/>
+                                <Button text="Actualizar listas" onAction="#cargarOpciones"/>
                                 <Button text="Limpiar" onAction="#onLimpiarFormulario"
                                         style="-fx-padding: 8 16;"/>
                             </HBox>
@@ -109,11 +107,11 @@
                             <Label text="Operación:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                             <ComboBox fx:id="cmbOpCajon" prefWidth="240.0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-                            <Label text="ID Tipo Cajón:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-                            <TextField fx:id="txtCajonTipoId" promptText="Ej: CAJ-12" prefWidth="140.0" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                            <Label text="Tipo de cajón:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                            <ComboBox fx:id="cmbCajonTipo" promptText="Elegí un tipo" prefWidth="220.0" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
 
-                            <Label text="ID Cliente/Repartidor:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                            <TextField fx:id="txtCajonClienteId" promptText="Opcional si es alta en fábrica" prefWidth="240.0" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label text="Repartidor titular:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <ComboBox fx:id="cmbCajonCliente" promptText="Elegí un repartidor" prefWidth="240.0" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
                             <Label text="Cantidad:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
                             <TextField fx:id="txtCajonCantidad" promptText="Cantidad" prefWidth="140.0" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
