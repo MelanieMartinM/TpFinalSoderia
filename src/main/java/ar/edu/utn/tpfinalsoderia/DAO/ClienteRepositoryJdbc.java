@@ -18,14 +18,17 @@ public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
 
     }
 
-        private void conectar() throws PersistenciaException {
-            try {
-                this.conexion = ConexionFactory.abrirConexion();
-            } catch (SQLException e) {
-                throw new PersistenciaException("No se pudo conectar a la base de datos", e);
-            }
-        }
+    public ClienteRepositoryJdbc(Connection conexion) {
+        super(java.util.Objects.requireNonNull(conexion, "La conexión es obligatoria."));
+    }
 
+    private void conectar() throws PersistenciaException {
+        try {
+            this.conexion = ConexionFactory.abrirConexion();
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo conectar a la base de datos", e);
+        }
+    }
 
 
     @Override
@@ -43,6 +46,9 @@ public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
 
     @Override
     public void guardar(Cliente cliente) {
+        if (cliente != null && (cliente.getId() == null || cliente.getId().isBlank())) {
+            cliente.setId(java.util.UUID.randomUUID().toString());
+        }
         String sql = "INSERT INTO clientes "
                 + "(id, nombre, telefono, direccion, activo) "
                 + "VALUES (?, ?, ?, ?, ?)";
@@ -149,5 +155,9 @@ public class ClienteRepositoryJdbc extends RepositorioJdbc<Cliente> {
                     "No se pudo desactivar el cliente.", e
             );
         }
+    }
+    @Override
+    public void desactivar(String id) {
+        eliminar(id); // Para esta entidad, eliminar ya realiza la baja lógica.
     }
 }

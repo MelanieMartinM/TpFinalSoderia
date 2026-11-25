@@ -4,19 +4,16 @@ import ar.edu.utn.tpfinalsoderia.DAO.ConexionFactory;
 import ar.edu.utn.tpfinalsoderia.DAO.UsuarioRepositoryJdbc;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.models.Usuario;
+import ar.edu.utn.tpfinalsoderia.utils.SeguridadContrasena;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 public class ServicioLogin {
 
-    /**
-     * Busca el usuario y verifica si puede iniciar sesión.
-     *
-     * Por ahora, la verificación de contraseña está pendiente.
-     * Por eso el método todavía no permite ingresar.
-     */
-    public Usuario iniciarSesion(String nombreUsuario, String contrasena) {
+    public Usuario iniciarSesion(
+            String nombreUsuario,
+            String contrasena) {
 
         if (nombreUsuario == null || nombreUsuario.isBlank()
                 || contrasena == null || contrasena.isEmpty()) {
@@ -36,11 +33,17 @@ public class ServicioLogin {
                 return null;
             }
 
-            // PENDIENTE:
-            // Verificar la contraseña ingresada contra el hash guardado.
-            //
-            // Hasta implementar esa comprobación, no se permite ingresar.
-            return null;
+            boolean contrasenaCorrecta =
+                    SeguridadContrasena.verificarContrasena(
+                            contrasena,
+                            usuario.getHashContrasena()
+                    );
+
+            if (!contrasenaCorrecta) {
+                return null;
+            }
+
+            return usuario;
 
         } catch (SQLException e) {
             throw new PersistenciaException(

@@ -4,100 +4,347 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17"
+<BorderPane xmlns="http://javafx.com/javafx/22"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="ar.edu.utn.tpfinalsoderia.controllers.RetirosController"
-            prefWidth="980.0" prefHeight="680.0">
+            prefWidth="980" prefHeight="680"
+            style="-fx-background-color: #f2f8fc;">
 
     <top>
-        <VBox spacing="4.0" style="-fx-background-color: #1e3a5f; -fx-padding: 14;">
-            <Label text="Retiros y Cobros - Sodería"
-                   style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
-            <Label text="Registro de retiros parciales, cajones, validación de stock y cobros"
-                   style="-fx-text-fill: #d0e1f9; -fx-font-size: 12px;"/>
+        <VBox spacing="4"
+              style="-fx-background-color: #1e3a5f; -fx-padding: 14;">
+
+            <Label text="Retiros y cobros - Sodería"
+                   style="-fx-text-fill: white;
+                          -fx-font-size: 20px;
+                          -fx-font-weight: bold;"/>
+
+            <Label text="Seleccioná las opciones por nombre. Los identificadores se usan internamente."
+                   style="-fx-text-fill: #d0e1f9;"/>
         </VBox>
     </top>
 
     <center>
-        <VBox spacing="12.0">
-            <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
-            </padding>
 
-            <HBox spacing="10.0" alignment="CENTER_LEFT">
-                <CheckBox fx:id="chkEsFason" text="Repartidor" onAction="#onToggleFason"/>
-                <TextField fx:id="txtClienteId" promptText="ID Cliente" disable="true" prefWidth="140.0"/>
-                <Label text="ID Pedido:"/>
-                <TextField fx:id="txtPedidoId" promptText="Opcional" prefWidth="140.0"/>
-            </HBox>
+        <ScrollPane fitToWidth="true">
 
-            <GridPane hgap="8.0" vgap="8.0">
-                <Label text="Presentación ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtPresentacionId" promptText="Ej: PRES-001" prefWidth="120.0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <VBox spacing="10">
 
-                <Label text="Detalle Pedido ID:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-                <TextField fx:id="txtDetallePedidoId" promptText="Opcional" prefWidth="120.0" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                <padding>
+                    <Insets top="15" right="15"
+                            bottom="15" left="15"/>
+                </padding>
 
-                <Label text="Cant. Pedida:" GridPane.rowIndex="0" GridPane.columnIndex="4"/>
-                <TextField fx:id="txtCantidadPedida" promptText="0" prefWidth="80.0" GridPane.rowIndex="0" GridPane.columnIndex="5"/>
+                <!-- SELECCIÓN DEL REPARTIDOR Y PEDIDO -->
 
-                <Label text="Cant. Retirada:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtCantidadRetirada" promptText="Cantidad" prefWidth="120.0" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
 
-                <Label text="Precio Unit.:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-                <TextField fx:id="txtPrecioAplicado" promptText="0.0" prefWidth="120.0" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+                    <Label text="Repartidor:"/>
 
-                <Label text="Tipo Cajón / Cant.:" GridPane.rowIndex="1" GridPane.columnIndex="4"/>
-                <HBox spacing="5.0" GridPane.rowIndex="1" GridPane.columnIndex="5">
-                    <TextField fx:id="txtTipoCajonId" promptText="ID Cajón" prefWidth="90.0"/>
-                    <TextField fx:id="txtCantidadCajones" promptText="0" prefWidth="60.0"/>
+                    <ComboBox fx:id="cmbCliente"
+                              promptText="Elegí un repartidor"
+                              onAction="#onSeleccionCliente"
+                              prefWidth="250"/>
+
+                    <Label text="Pedido:"/>
+
+                    <ComboBox fx:id="cmbPedido"
+                              promptText="Sin pedido (opcional)"
+                              onAction="#onSeleccionPedido"
+                              prefWidth="260"/>
+
+                    <Button text="Sin pedido"
+                            onAction="#onQuitarPedido"/>
+
+                    <Button text="Actualizar listas"
+                            onAction="#cargarOpciones"/>
+
                 </HBox>
 
-                <Button text="Agregar Ítem" onAction="#onAgregarDetalle" GridPane.rowIndex="1" GridPane.columnIndex="6"/>
-            </GridPane>
+                <!-- DATOS DEL PRODUCTO -->
 
-            <TableView fx:id="tblDetalles" prefHeight="150.0">
-                <columns>
-                    <TableColumn fx:id="colDetPres" text="Presentación" prefWidth="160.0"/>
-                    <TableColumn fx:id="colDetPedido" text="Cant. Pedida" prefWidth="110.0"/>
-                    <TableColumn fx:id="colDetRetirado" text="Cant. Retirada" prefWidth="120.0"/>
-                    <TableColumn fx:id="colDetPrecio" text="Precio" prefWidth="110.0"/>
-                    <TableColumn fx:id="colDetCajones" text="Cajones" prefWidth="100.0"/>
-                    <TableColumn fx:id="colDetSubtotal" text="Subtotal" prefWidth="120.0"/>
-                </columns>
-            </TableView>
+                <GridPane hgap="8" vgap="8">
 
-            <HBox spacing="12.0" alignment="CENTER_LEFT">
-                <Label fx:id="lblTotalRetiro" text="Total a retirar: $0.0" style="-fx-font-weight: bold;"/>
-                <Label text="Medio:"/>
-                <ComboBox fx:id="cmbMedioPago" prefWidth="140.0"/>
-                <Label text="Monto:"/>
-                <TextField fx:id="txtMontoCobro" prefWidth="100.0"/>
-                <CheckBox fx:id="chkSinCobro" text="Paga después" onAction="#onToggleSinCobro"/>
-                <TextField fx:id="txtResponsable" visible="false" managed="false" disable="true"/>
-                <TextField fx:id="txtMotivo" visible="false" managed="false" disable="true"/>
-                <Button text="Confirmar Retiro y Cobro" onAction="#onConfirmarRetiro"
-                        style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-font-weight: bold;"/>
-            </HBox>
+                    <Label text="Detalle del pedido:"
+                           GridPane.rowIndex="0"
+                           GridPane.columnIndex="0"/>
 
-            <HBox spacing="8.0" alignment="CENTER_LEFT">
-                <Label text="Pago posterior: ID del retiro"/>
-                <TextField fx:id="txtRetiroPagoId" promptText="ID retiro" prefWidth="200.0"/>
-                <Label text="Usá el medio y monto indicados arriba."/>
-                <Button text="Registrar pago posterior" onAction="#onCobrarPosterior"/>
-            </HBox>
+                    <ComboBox fx:id="cmbDetallePedido"
+                              promptText="Elegí un producto pendiente"
+                              onAction="#onSeleccionDetalle"
+                              prefWidth="260"
+                              GridPane.rowIndex="0"
+                              GridPane.columnIndex="1"/>
 
-            <Label fx:id="lblEstado" text=""/>
+                    <Label text="Pendientes:"
+                           GridPane.rowIndex="0"
+                           GridPane.columnIndex="2"/>
 
-            <Label text="Cobros Registrados" style="-fx-font-weight: bold;"/>
-            <TableView fx:id="tblCobros" prefHeight="150.0">
-                <columns>
-                    <TableColumn fx:id="colCobFecha" text="Fecha" prefWidth="160.0"/>
-                    <TableColumn fx:id="colCobMonto" text="Monto" prefWidth="120.0"/>
-                    <TableColumn fx:id="colCobMedio" text="Medio de Pago" prefWidth="150.0"/>
-                    <TableColumn fx:id="colCobAut" text="Estado / Autorización" prefWidth="420.0"/>
-                </columns>
-            </TableView>
-        </VBox>
+                    <TextField fx:id="txtCantidadPedida"
+                               editable="false"
+                               prefWidth="70"
+                               GridPane.rowIndex="0"
+                               GridPane.columnIndex="3"/>
+
+                    <Label text="Presentación sin pedido:"
+                           GridPane.rowIndex="1"
+                           GridPane.columnIndex="0"/>
+
+                    <ComboBox fx:id="cmbPresentacion"
+                              promptText="Elegí una presentación"
+                              onAction="#onSeleccionPresentacion"
+                              prefWidth="260"
+                              GridPane.rowIndex="1"
+                              GridPane.columnIndex="1"/>
+
+                    <Label text="Unidades:"
+                           GridPane.rowIndex="1"
+                           GridPane.columnIndex="2"/>
+
+                    <TextField fx:id="txtCantidadRetirada"
+                               promptText="Cantidad"
+                               prefWidth="70"
+                               GridPane.rowIndex="1"
+                               GridPane.columnIndex="3"/>
+
+                    <Label text="Precio unitario:"
+                           GridPane.rowIndex="2"
+                           GridPane.columnIndex="0"/>
+
+                    <TextField fx:id="txtPrecioAplicado"
+                               promptText="Precio"
+                               editable="false"
+                               prefWidth="120"
+                               GridPane.rowIndex="2"
+                               GridPane.columnIndex="1"/>
+
+                    <Label text="Tipo y cantidad de cajones:"
+                           GridPane.rowIndex="3"
+                           GridPane.columnIndex="0"/>
+
+                    <HBox spacing="6"
+                          GridPane.rowIndex="3"
+                          GridPane.columnIndex="1">
+
+                        <ComboBox fx:id="cmbTipoCajon"
+                                  promptText="Tipo de cajón"
+                                  prefWidth="200"/>
+
+                        <TextField fx:id="txtCantidadCajones"
+                                   promptText="0"
+                                   prefWidth="60"/>
+
+                    </HBox>
+
+                    <HBox spacing="6"
+                          GridPane.rowIndex="3"
+                          GridPane.columnIndex="2"
+                          GridPane.columnSpan="2">
+
+                        <Button text="Agregar producto"
+                                onAction="#onAgregarDetalle"/>
+
+                        <Button text="Vaciar lista"
+                                onAction="#onVaciarDetalles"/>
+
+                    </HBox>
+
+                </GridPane>
+
+                <!-- DETALLES DEL RETIRO -->
+
+                <TableView fx:id="tblDetalles"
+                           prefHeight="130">
+
+                    <columns>
+
+                        <TableColumn fx:id="colDetPres"
+                                     text="Presentación"
+                                     prefWidth="180"/>
+
+                        <TableColumn fx:id="colDetPedido"
+                                     text="Pedidas"
+                                     prefWidth="90"/>
+
+                        <TableColumn fx:id="colDetRetirado"
+                                     text="Retiradas"
+                                     prefWidth="90"/>
+
+                        <TableColumn fx:id="colDetPrecio"
+                                     text="Precio"
+                                     prefWidth="100"/>
+
+                        <TableColumn fx:id="colDetCajones"
+                                     text="Cajones"
+                                     prefWidth="90"/>
+
+                        <TableColumn fx:id="colDetSubtotal"
+                                     text="Subtotal"
+                                     prefWidth="120"/>
+
+                    </columns>
+
+                </TableView>
+
+                <!-- COBRO DEL RETIRO -->
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+
+                    <Label fx:id="lblTotalRetiro"
+                           text="Total a retirar: $0"
+                           style="-fx-font-weight: bold;
+                                  -fx-font-size: 15px;
+                                  -fx-text-fill: #283783;"/>
+
+                    <Label text="Medio:"/>
+
+                    <ComboBox fx:id="cmbMedioPago"
+                              prefWidth="110"/>
+
+                    <Label text="Monto:"/>
+
+                    <TextField fx:id="txtMontoCobro"
+                               editable="false"
+                               prefWidth="100"/>
+
+                    <CheckBox fx:id="chkSinCobro"
+                              text="Paga después"
+                              onAction="#onToggleSinCobro"/>
+
+                </HBox>
+
+                <!-- AUTORIZACIÓN SIN PAGO -->
+
+                <VBox spacing="8"
+                      style="-fx-background-color: #e0eaf2;
+                             -fx-background-radius: 6;
+                             -fx-padding: 12;">
+
+                    <Label text="Autorización de retiro sin pago"
+                           style="-fx-font-weight: bold;
+                                  -fx-text-fill: #283783;"/>
+
+                    <Label fx:id="lblResponsableAutorizacion"
+                           wrapText="true"
+                           style="-fx-text-fill: #283783;"/>
+
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+
+                        <Label text="Motivo:"/>
+
+                        <TextField fx:id="txtMotivoAutorizacion"
+                                   promptText="Ingresá el motivo de la autorización"
+                                   disable="true"
+                                   HBox.hgrow="ALWAYS"/>
+
+                    </HBox>
+
+                </VBox>
+
+                <HBox alignment="CENTER_RIGHT">
+
+                    <Button text="Confirmar retiro"
+                            onAction="#onConfirmarRetiro"
+                            style="-fx-background-color: #2e7d32;
+                                   -fx-text-fill: white;
+                                   -fx-font-weight: bold;
+                                   -fx-padding: 10 20;"/>
+
+                </HBox>
+
+                <Separator/>
+
+                <!-- PAGOS POSTERIORES -->
+
+                <Label text="Registrar pago posterior"
+                       style="-fx-font-weight: bold;
+                              -fx-font-size: 16px;
+                              -fx-text-fill: #283783;"/>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+
+                    <Label text="Retiro pendiente:"/>
+
+                    <ComboBox fx:id="cmbRetiroPendiente"
+                              promptText="Elegí un retiro pendiente"
+                              prefWidth="300"/>
+
+                    <ComboBox fx:id="cmbMedioPosterior"
+                              prefWidth="110"/>
+
+                    <TextField fx:id="txtMontoPosterior"
+                               promptText="Monto"
+                               prefWidth="100"/>
+
+                    <Button text="Registrar pago"
+                            onAction="#onCobrarPosterior"
+                            style="-fx-background-color: #1565c0;
+                                   -fx-text-fill: white;
+                                   -fx-font-weight: bold;"/>
+
+                </HBox>
+
+                <Label text="La tarifa proporcional de seis sifones aún requiere configuración y pruebas."
+                       wrapText="true"
+                       style="-fx-text-fill: #a15c00;"/>
+
+                <!-- HISTORIAL DE COBROS -->
+
+                <Label text="Cobros registrados"
+                       style="-fx-font-weight: bold;
+                              -fx-font-size: 16px;
+                              -fx-text-fill: #283783;"/>
+
+                <TableView fx:id="tblCobros"
+                           prefHeight="160">
+
+                    <columns>
+
+                        <TableColumn fx:id="colCobFecha"
+                                     text="Fecha"
+                                     prefWidth="160"/>
+
+                        <TableColumn fx:id="colCobMonto"
+                                     text="Monto"
+                                     prefWidth="120"/>
+
+                        <TableColumn fx:id="colCobMedio"
+                                     text="Medio"
+                                     prefWidth="150"/>
+
+                        <TableColumn fx:id="colCobAut"
+                                     text="Estado"
+                                     prefWidth="200"/>
+
+                    </columns>
+
+                </TableView>
+
+            </VBox>
+
+        </ScrollPane>
+
     </center>
+
+    <!-- BARRA DE ESTADO FIJA -->
+
+    <bottom>
+
+        <VBox spacing="4"
+              minHeight="55"
+              style="-fx-background-color: #ffffff;
+                     -fx-padding: 10 15;
+                     -fx-border-color: #d0e1f9;
+                     -fx-border-width: 1 0 0 0;
+                     -fx-font-size: 13px;
+                     -fx-font-weight: bold;">
+
+            <Label fx:id="lblEstado"
+                   wrapText="true"
+                   maxWidth="Infinity"/>
+
+        </VBox>
+
+    </bottom>
+
 </BorderPane>

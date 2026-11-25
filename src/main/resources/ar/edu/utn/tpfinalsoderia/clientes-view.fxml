@@ -27,15 +27,6 @@
 
     <GridPane hgap="12" vgap="10">
 
-        <Label text="ID:"
-               GridPane.columnIndex="0"
-               GridPane.rowIndex="0"/>
-
-        <TextField fx:id="campoId"
-                   promptText="Ejemplo: CLI-001"
-                   GridPane.columnIndex="1"
-                   GridPane.rowIndex="0"/>
-
         <Label text="Nombre:"
                GridPane.columnIndex="0"
                GridPane.rowIndex="1"/>
@@ -67,15 +58,18 @@
 
     <HBox spacing="10">
 
-        <Button text="Guardar"
+        <Button fx:id="botonGuardar"
+                text="Guardar"
                 onAction="#guardarCliente"
                 style="-fx-background-color: #00a7db;
                        -fx-text-fill: white;"/>
 
-        <Button text="Actualizar"
+        <Button fx:id="botonActualizar"
+                text="Actualizar"
                 onAction="#actualizarCliente"/>
 
-        <Button text="Desactivar"
+        <Button fx:id="botonDesactivar"
+                text="Desactivar"
                 onAction="#desactivarCliente"/>
 
         <Button text="Limpiar"
@@ -91,10 +85,6 @@
                prefHeight="260">
 
         <columns>
-
-            <TableColumn fx:id="columnaId"
-                         text="ID"
-                         prefWidth="100"/>
 
             <TableColumn fx:id="columnaNombre"
                          text="Nombre"

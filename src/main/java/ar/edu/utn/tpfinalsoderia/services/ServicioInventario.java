@@ -17,6 +17,7 @@ import ar.edu.utn.tpfinalsoderia.models.StockCajon;
 import ar.edu.utn.tpfinalsoderia.models.StockEnvase;
 import ar.edu.utn.tpfinalsoderia.models.StockProducto;
 import ar.edu.utn.tpfinalsoderia.models.TipoCajon;
+import ar.edu.utn.tpfinalsoderia.utils.SesionUsuario;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -141,6 +142,7 @@ public class ServicioInventario {
         validarCantidadPositiva(cantidad);
         validarPresentacion(presentacion);
         presentacion = cargarPresentacion(presentacion.getId());
+        validarTitularidadMarca(cliente, presentacion);
 
         try (TransaccionJdbc tx = new TransaccionJdbc(conexion)) {
 
@@ -219,6 +221,7 @@ public class ServicioInventario {
     public List<StockProducto> consultarStock(Cliente cliente) throws PersistenciaException {
         if (cliente == null || cliente.getId() == null || cliente.getId().isBlank())
             throw new IllegalArgumentException("Debe indicar un repartidor.");
+
         return inventarioRepository.listarStockProductos().stream()
                 .filter(s -> s.getTitular() != null && cliente.getId().equals(s.getTitular().getId())).toList();
     }
@@ -276,9 +279,47 @@ public class ServicioInventario {
         }
     }
 
-    private void validarTitular(Cliente cliente) throws ReglaNegocioException {
-        if (cliente == null || cliente.getId() == null || cliente.getId().isBlank())
-            throw new ReglaNegocioException("Debe indicar el repartidor titular.");
+    private void validarTitular(Cliente cliente)
+            throws ReglaNegocioException {
+
+        verificarSesion();
+
+        if (cliente == null
+                || cliente.getId() == null
+                || cliente.getId().isBlank()) {
+
+            throw new ReglaNegocioException(
+                    "Debe indicar el repartidor titular."
+            );
+        }
+
+        String sql = "SELECT activo FROM clientes WHERE id = ?";
+
+        try (java.sql.PreparedStatement ps =
+                     conexion.prepareStatement(sql)) {
+
+            ps.setString(1, cliente.getId());
+
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+
+                if (!rs.next()) {
+                    throw new ReglaNegocioException(
+                            "El repartidor no existe."
+                    );
+                }
+
+                if (!rs.getBoolean("activo")) {
+                    throw new ReglaNegocioException(
+                            "El repartidor está desactivado."
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new PersistenciaException(
+                    "Error al validar el repartidor.", e
+            );
+        }
     }
 
     private Presentacion cargarPresentacion(String id) throws ReglaNegocioException {
@@ -302,6 +343,42 @@ public class ServicioInventario {
                 return p;
             }
         } catch (SQLException e) { throw new PersistenciaException("Error al cargar presentación.", e); }
+    }
+    private void verificarSesion() {
+
+        if (!SesionUsuario.haySesionActiva()) {
+
+            throw new IllegalStateException(
+                    "No hay una sesión activa."
+            );
+        }
+    }
+    private void validarTitularidadMarca(
+            Cliente cliente,
+            Presentacion presentacion)
+            throws ReglaNegocioException {
+
+        Marca marca = presentacion.getMarca();
+
+        if (marca == null) {
+            throw new ReglaNegocioException(
+                    "La presentación no tiene una marca asignada."
+            );
+        }
+
+        if (marca.isEsPropiaFabrica()) {
+            return;
+        }
+
+        if (marca.getTitular() == null
+                || !Objects.equals(
+                cliente.getId(),
+                marca.getTitular().getId())) {
+
+            throw new ReglaNegocioException(
+                    "La marca pertenece a otro repartidor."
+            );
+        }
     }
 
 }
