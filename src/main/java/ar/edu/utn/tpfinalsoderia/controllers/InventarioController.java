@@ -253,39 +253,156 @@ public class InventarioController {
 
     @FXML
     private void onConfirmarCajon() {
+
+
         if (servicioInventario == null) {
-            mostrarError(lblEstadoCajon, "No hay conexión activa con la base de datos.");
+
+            mostrarError(
+                    lblEstadoCajon,
+                    "No hay conexión activa con la base de datos."
+            );
+
             return;
         }
+
         try {
-            TipoCajon tipo = valorSeleccionado(cmbCajonTipo, "Seleccioná un tipo de cajón.");
-            Cliente cliente = valorSeleccionado(cmbCajonCliente, "Seleccioná el repartidor titular.");
-            int cantidad = Integer.parseInt(txtCajonCantidad.getText().trim());
-            boolean esRetorno = CAJON_INGRESO_DEVOLUCION.equals(cmbOpCajon.getValue());
-            servicioInventario.registrarMovimientoCajon(cliente, tipo.getId(), cantidad, esRetorno);
-            mostrarExito(lblEstadoCajon, "Movimiento de " + cantidad + " cajones registrado.");
+
+            TipoCajon tipo = valorSeleccionado(
+                    cmbCajonTipo,
+                    "Seleccioná un tipo de cajón."
+            );
+
+            Cliente cliente = valorSeleccionado(
+                    cmbCajonCliente,
+                    "Seleccioná el repartidor titular."
+            );
+
+            int cantidad = Integer.parseInt(
+                    txtCajonCantidad.getText().trim()
+            );
+
+            if (cantidad <= 0) {
+                mostrarError(
+                        lblEstadoCajon,
+                        "La cantidad debe ser mayor a cero."
+                );
+
+                return;
+            }
+            String operacion = cmbOpCajon.getValue();
+
+            if (!CAJON_INGRESO_DEVOLUCION.equals(operacion)
+                    && !CAJON_ENTREGA_SALIDA.equals(operacion)) {
+
+                throw new ReglaNegocioException(
+                        "Seleccioná una operación de cajones."
+                );
+            }
+
+            boolean esRetorno =
+                    CAJON_INGRESO_DEVOLUCION.equals(operacion);
+
+            servicioInventario.registrarMovimientoCajon(
+                    cliente,
+                    tipo.getId(),
+                    cantidad,
+                    esRetorno
+            );
+
             cmbCajonTipo.getSelectionModel().clearSelection();
             cmbCajonCliente.getSelectionModel().clearSelection();
             txtCajonCantidad.clear();
+
+            mostrarExito(
+                    lblEstadoCajon,
+                    "Movimiento de " + cantidad
+                            + " cajones registrado."
+            );
+
             cargarDatosTablas();
+
         } catch (NumberFormatException e) {
-            mostrarError(lblEstadoCajon, "La cantidad de cajones debe ser un número entero.");
-        } catch (ReglaNegocioException | StockInsuficienteException | PersistenciaException e) {
-            mostrarError(lblEstadoCajon, e.getMessage());
+            mostrarError(
+                    lblEstadoCajon,
+                    "La cantidad debe ser un número entero."
+            );
+
+        } catch (ReglaNegocioException |
+                 StockInsuficienteException |
+                 PersistenciaException |
+                 IllegalStateException e) {
+
+            mostrarError(
+                    lblEstadoCajon,
+                    e.getMessage() != null
+                            ? e.getMessage()
+                            : "No se pudo registrar el movimiento de cajones."
+            );
         }
     }
 
     @FXML
     public void cargarDatosTablas() {
-        if (servicioInventario == null) return;
+
+        if (servicioInventario == null) {
+            return;
+        }
+
         try {
-            tblStockEnvases.setItems(FXCollections.observableArrayList(servicioInventario.listarStockEnvases()));
-            tblStockProductos.setItems(FXCollections.observableArrayList(servicioInventario.listarStockProductos()));
-            tblMovimientos.setItems(FXCollections.observableArrayList(servicioInventario.listarMovimientosEnvases()));
-            tblStockCajones.setItems(FXCollections.observableArrayList(servicioInventario.listarStockCajones()));
-            tblMovCajones.setItems(FXCollections.observableArrayList(servicioInventario.listarMovimientosCajones()));
-        } catch (PersistenciaException e) {
-            mostrarError(lblEstado, "Error al refrescar tablas: " + e.getMessage());
+
+            tblStockCajones.setItems(
+                    FXCollections.observableArrayList(
+                            servicioInventario.listarStockCajones()
+                    )
+            );
+
+            tblMovCajones.setItems(
+                    FXCollections.observableArrayList(
+                            servicioInventario.listarMovimientosCajones()
+                    )
+            );
+
+            tblStockCajones.refresh();
+            tblMovCajones.refresh();
+
+        } catch (PersistenciaException | IllegalStateException e) {
+
+            mostrarError(
+                    lblEstadoCajon,
+                    "Error al actualizar cajones: " + e.getMessage()
+            );
+        }
+
+        try {
+
+            tblStockEnvases.setItems(
+                    FXCollections.observableArrayList(
+                            servicioInventario.listarStockEnvases()
+                    )
+            );
+
+            tblStockProductos.setItems(
+                    FXCollections.observableArrayList(
+                            servicioInventario.listarStockProductos()
+                    )
+            );
+
+            tblMovimientos.setItems(
+                    FXCollections.observableArrayList(
+                            servicioInventario.listarMovimientosEnvases()
+                    )
+            );
+
+            tblStockEnvases.refresh();
+            tblStockProductos.refresh();
+            tblMovimientos.refresh();
+
+        } catch (PersistenciaException | IllegalStateException e) {
+
+            mostrarError(
+                    lblEstado,
+                    "Error al actualizar inventario: " + e.getMessage()
+            );
         }
     }
 
