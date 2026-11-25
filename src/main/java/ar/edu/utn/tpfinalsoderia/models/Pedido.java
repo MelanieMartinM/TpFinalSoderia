@@ -10,24 +10,23 @@ import java.util.Objects;
 
 public class Pedido {
 
-private String id;
-private Cliente cliente;
-        private LocalDateTime fecha;
-        private EstadoPedido estado;
-        private final List<DetallePedido> detalles = new ArrayList<>();
+    private String id;
+    private Cliente cliente;
+    private LocalDateTime fecha;
+    private EstadoPedido estado;
 
-        public Pedido(){
-            this.fecha=LocalDateTime.now();
-            this.estado=EstadoPedido.BORRADOR;
-        }
+    private final List<DetallePedido> detalles = new ArrayList<>();
 
+    public Pedido() {
+        this.fecha = LocalDateTime.now();
+        this.estado = EstadoPedido.BORRADOR;
+    }
 
-        public Pedido(String id, Cliente cliente){
-            this();
-            this.id=id;
-            this.cliente=cliente;
-        }
-
+    public Pedido(String id, Cliente cliente) {
+        this();
+        this.id = id;
+        this.cliente = cliente;
+    }
 
     public String getId() {
         return id;
@@ -64,33 +63,61 @@ private Cliente cliente;
     public List<DetallePedido> getDetalles() {
         return detalles;
     }
-    public void agregarDetalle(DetallePedido detalle){
-            this.detalles.add(detalle);
 
+    public void agregarDetalle(DetallePedido detalle) {
+
+        if (detalle == null) {
+            throw new IllegalArgumentException(
+                    "El detalle del pedido no puede ser nulo."
+            );
+        }
+
+        detalles.add(detalle);
     }
-    public void confirmar(){
 
+    public void confirmar() {
 
-            if (detalles.isEmpty()){
-                throw new IllegalStateException("Error.No se puede confirmar un pedido sin detalles.");
+        if (estado != EstadoPedido.BORRADOR) {
+            throw new IllegalStateException(
+                    "Solo se pueden confirmar pedidos en estado BORRADOR."
+            );
+        }
 
-            }
-            this.estado=EstadoPedido.CONFIRMADO;
+        if (detalles.isEmpty()) {
+            throw new IllegalStateException(
+                    "No se puede confirmar un pedido sin detalles."
+            );
+        }
 
+        this.estado = EstadoPedido.CONFIRMADO;
     }
-public BigDecimal calcularTotal(){
-            BigDecimal aux= BigDecimal.ZERO;
 
-            for(DetallePedido detalle : detalles){
-                aux=aux.add(detalle.calcularSubtotal());
-            }
-            return aux ;
-}
+    public BigDecimal calcularTotal() {
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (DetallePedido detalle : detalles) {
+
+            total = total.add(
+                    detalle.calcularSubtotal()
+            );
+        }
+
+        return total;
+    }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Pedido pedido)) return false;
-        return id == pedido.id;
+
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof Pedido pedido)) {
+            return false;
+        }
+
+        return id != null && Objects.equals(id, pedido.id);
     }
 
     @Override

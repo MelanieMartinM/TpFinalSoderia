@@ -18,7 +18,8 @@
               spacing="14">
 
             <padding>
-                <Insets top="25" right="25" bottom="25" left="25"/>
+                <Insets top="25" right="25"
+                        bottom="25" left="25"/>
             </padding>
 
             <Label text="Sistema de Sodería"
@@ -30,36 +31,72 @@
                    style="-fx-font-size: 17px;
                           -fx-text-fill: #283783;"/>
 
+            <Label fx:id="etiquetaUsuario"
+                   wrapText="true"
+                   style="-fx-font-size: 13px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #283783;
+                          -fx-background-color: #e0eaf2;
+                          -fx-background-radius: 6;
+                          -fx-padding: 10;"/>
+
             <Button text="Clientes"
                     prefWidth="200"
                     onAction="#abrirClientes"
                     style="-fx-background-color: #00a7db;
                            -fx-text-fill: white;
-                           -fx-font-size: 14px;"/>
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 6;"/>
 
             <Button text="Inventario"
                     prefWidth="200"
                     onAction="#abrirInventario"
                     style="-fx-background-color: #00a7db;
                            -fx-text-fill: white;
-                           -fx-font-size: 14px;"/>
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 6;"/>
 
-            <Button text="Catálogo" prefWidth="200" onAction="#abrirCatalogo"/>
-            <Button text="Pedidos" prefWidth="200" onAction="#abrirPedidos"/>
+            <Button text="Catálogo"
+                    prefWidth="200"
+                    onAction="#abrirCatalogo"
+                    style="-fx-background-color: #00a7db;
+                           -fx-text-fill: white;
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 6;"/>
+
+            <Button text="Pedidos"
+                    prefWidth="200"
+                    onAction="#abrirPedidos"
+                    style="-fx-background-color: #00a7db;
+                           -fx-text-fill: white;
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 6;"/>
 
             <Button text="Retiros y cobros"
                     prefWidth="200"
                     onAction="#abrirRetiros"
                     style="-fx-background-color: #00a7db;
                            -fx-text-fill: white;
-                           -fx-font-size: 14px;"/>
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 6;"/>
 
-            <Button text="Reportes"
+            <Button fx:id="botonReportes"
+                    text="Reportes"
                     prefWidth="200"
                     onAction="#abrirReportes"
                     style="-fx-background-color: #00a7db;
                            -fx-text-fill: white;
-                           -fx-font-size: 14px;"/>
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 6;"/>
+
+            <Button text="Cerrar sesión"
+                    prefWidth="200"
+                    onAction="#cerrarSesion"
+                    style="-fx-background-color: #283783;
+                           -fx-text-fill: white;
+                           -fx-font-size: 14px;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 6;"/>
 
             <Label fx:id="mensaje"
                    wrapText="true"

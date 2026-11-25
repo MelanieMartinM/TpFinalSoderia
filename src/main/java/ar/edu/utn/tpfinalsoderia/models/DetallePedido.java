@@ -3,9 +3,6 @@ package ar.edu.utn.tpfinalsoderia.models;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-
-
-
 public class DetallePedido {
 
     private String id;
@@ -15,11 +12,16 @@ public class DetallePedido {
     private int cantidadCajones;
     private TipoCajon tipoCajon;
 
-
     public DetallePedido() {
     }
 
-    public DetallePedido(Presentacion presentacion, int cantUnidades, BigDecimal precioUnitario, int cantCajones, TipoCajon tipoCajon) {
+    public DetallePedido(
+            Presentacion presentacion,
+            int cantUnidades,
+            BigDecimal precioUnitario,
+            int cantCajones,
+            TipoCajon tipoCajon) {
+
         this.presentacion = presentacion;
         this.cantidadUnidades = cantUnidades;
         this.precioUnitario = precioUnitario;
@@ -27,9 +29,13 @@ public class DetallePedido {
         this.tipoCajon = tipoCajon;
     }
 
-    public String getId() { return id; }
+    public String getId() {
+        return id;
+    }
 
-    public void setId(String id) { this.id = id; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public Presentacion getPresentacion() {
         return presentacion;
@@ -71,21 +77,45 @@ public class DetallePedido {
         this.tipoCajon = tipoCajon;
     }
 
-    public BigDecimal calcularSubtotal(){
-        if(this== null || cantidadUnidades <=0){
-            return BigDecimal.ZERO;
+    public BigDecimal calcularSubtotal() {
 
-        }return precioUnitario.multiply (BigDecimal.valueOf(cantidadUnidades));
+        if (cantidadUnidades <= 0) {
+            throw new IllegalStateException(
+                    "La cantidad de unidades debe ser mayor a cero."
+            );
+        }
+
+        if (precioUnitario == null
+                || precioUnitario.signum() <= 0
+                || precioUnitario.stripTrailingZeros().scale() > 2) {
+
+            throw new IllegalStateException(
+                    "El precio unitario debe ser positivo "
+                            + "y tener hasta dos decimales."
+            );
+        }
+
+        return precioUnitario.multiply(
+                BigDecimal.valueOf(cantidadUnidades)
+        );
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof DetallePedido that)) return false;
-        return Objects.equals(presentacion, that.presentacion);
+
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof DetallePedido detalle)) {
+            return false;
+        }
+
+        return id != null && Objects.equals(id, detalle.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(presentacion);
+        return Objects.hash(id);
     }
 }

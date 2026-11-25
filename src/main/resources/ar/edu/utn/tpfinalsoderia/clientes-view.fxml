@@ -58,15 +58,18 @@
 
     <HBox spacing="10">
 
-        <Button text="Guardar"
+        <Button fx:id="botonGuardar"
+                text="Guardar"
                 onAction="#guardarCliente"
                 style="-fx-background-color: #00a7db;
                        -fx-text-fill: white;"/>
 
-        <Button text="Actualizar"
+        <Button fx:id="botonActualizar"
+                text="Actualizar"
                 onAction="#actualizarCliente"/>
 
-        <Button text="Desactivar"
+        <Button fx:id="botonDesactivar"
+                text="Desactivar"
                 onAction="#desactivarCliente"/>
 
         <Button text="Limpiar"

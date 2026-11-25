@@ -4,6 +4,7 @@ import ar.edu.utn.tpfinalsoderia.HelloApplication;
 import ar.edu.utn.tpfinalsoderia.exceptions.PersistenciaException;
 import ar.edu.utn.tpfinalsoderia.models.Usuario;
 import ar.edu.utn.tpfinalsoderia.services.ServicioLogin;
+import ar.edu.utn.tpfinalsoderia.utils.SesionUsuario;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,15 +27,21 @@ public class LoginController {
     @FXML
     private Label mensaje;
 
-    private final ServicioLogin servicioLogin = new ServicioLogin();
+    private final ServicioLogin servicioLogin =
+            new ServicioLogin();
 
     @FXML
     private void iniciarSesion() {
+
+        mensaje.setText("");
+
         String nombreUsuario = campoUsuario.getText().trim();
         String contrasena = campoContrasena.getText();
 
         if (nombreUsuario.isEmpty() || contrasena.isEmpty()) {
-            mensaje.setText("Completá el usuario y la contraseña.");
+            mensaje.setText(
+                    "Completá el usuario y la contraseña."
+            );
             return;
         }
 
@@ -45,22 +52,44 @@ public class LoginController {
             );
 
             if (usuario == null) {
-                mensaje.setText("Usuario o contraseña incorrectos.");
+                mensaje.setText(
+                        "Usuario o contraseña incorrectos."
+                );
+                campoContrasena.clear();
                 return;
             }
 
+            SesionUsuario.iniciarSesion(usuario);
+
             abrirMenu();
 
-        } catch (PersistenciaException | IllegalStateException e) {
-            mensaje.setText("No se pudo conectar con la base de datos.");
+        } catch (PersistenciaException |
+                 IllegalStateException |
+                 IllegalArgumentException e) {
+
+            SesionUsuario.cerrarSesion();
+
+            mensaje.setText(
+                    "No se pudo iniciar sesión. Revisá la configuración."
+            );
+
+            e.printStackTrace();
         }
     }
 
     private void abrirMenu() {
-        URL recurso = HelloApplication.class.getResource("menu-view.fxml");
+
+        URL recurso = HelloApplication.class.getResource(
+                "menu-view.fxml"
+        );
 
         if (recurso == null) {
-            mensaje.setText("No se encontró la pantalla del menú.");
+
+            SesionUsuario.cerrarSesion();
+
+            mensaje.setText(
+                    "No se encontró la pantalla del menú."
+            );
             return;
         }
 
@@ -69,6 +98,9 @@ public class LoginController {
             campoUsuario.getScene().setRoot(menu);
 
         } catch (IOException e) {
+
+            SesionUsuario.cerrarSesion();
+
             mensaje.setText("No se pudo abrir el menú.");
             e.printStackTrace();
         }
